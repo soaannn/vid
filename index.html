@@ -1,315 +1,141 @@
-<!DOCTYPE html>
-<html lang="fr" >
+<!doctype html>
+<html lang="fr">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Soan - Mini YouTube</title>
-  <style>
-    /* RESET */
-    * {
-      box-sizing: border-box;
-    }
-    body {
-      margin: 0;
-      background-color: #121212;
-      color: #eee;
-      font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
-      display: flex;
-      flex-direction: column;
-      min-height: 100vh;
-    }
-    header {
-      background: #181818;
-      padding: 1rem 2rem;
-      font-weight: 700;
-      font-size: 1.8rem;
-      border-bottom: 1px solid #333;
-      user-select: none;
-    }
-    main {
-      flex: 1;
-      display: flex;
-      flex-direction: row;
-      padding: 1rem 2rem;
-      gap: 2rem;
-      overflow: hidden;
-    }
-    /* Upload form */
-    #uploadSection {
-      flex-basis: 350px;
-      background: #222;
-      padding: 1rem;
-      border-radius: 10px;
-      box-shadow: 0 0 10px #d32f2f88;
-      display: flex;
-      flex-direction: column;
-      gap: 1rem;
-      max-height: 90vh;
-      overflow-y: auto;
-    }
-    #uploadSection h2 {
-      margin-top: 0;
-      margin-bottom: 0.5rem;
-      font-weight: 700;
-      font-size: 1.4rem;
-      text-align: center;
-      color: #f44336;
-    }
-    label {
-      display: block;
-      margin-bottom: 0.25rem;
-      font-weight: 600;
-      color: #f44336;
-    }
-    input[type="text"], textarea {
-      width: 100%;
-      padding: 0.5rem;
-      border-radius: 6px;
-      border: none;
-      font-size: 1rem;
-      resize: vertical;
-      background: #333;
-      color: #eee;
-      outline: none;
-      box-shadow: inset 0 0 5px #000;
-      transition: box-shadow 0.2s ease;
-    }
-    input[type="text"]:focus, textarea:focus {
-      box-shadow: inset 0 0 8px #f44336;
-    }
-    input[type="file"] {
-      display: none;
-    }
-    #fileLabel {
-      cursor: pointer;
-      background: #d32f2f;
-      padding: 0.7rem 1rem;
-      border-radius: 6px;
-      color: white;
-      font-weight: 700;
-      text-align: center;
-      user-select: none;
-      transition: background-color 0.3s ease;
-    }
-    #fileLabel:hover {
-      background: #b71c1c;
-    }
-    button#uploadSubmit {
-      background: #d32f2f;
-      border: none;
-      color: white;
-      padding: 0.7rem;
-      font-weight: 700;
-      font-size: 1.1rem;
-      border-radius: 6px;
-      cursor: pointer;
-      transition: background-color 0.3s ease;
-    }
-    button#uploadSubmit:disabled {
-      background: #8b0000;
-      cursor: not-allowed;
-    }
-    button#uploadSubmit:hover:not(:disabled) {
-      background: #b71c1c;
-    }
-    /* Video list */
-    #videoList {
-      flex: 1;
-      overflow-y: auto;
-      display: grid;
-      grid-template-columns: repeat(auto-fill,minmax(320px,1fr));
-      gap: 1.5rem;
-      padding-right: 1rem;
-    }
-    .video-card {
-      background: #222;
-      border-radius: 8px;
-      overflow: hidden;
-      box-shadow: 0 0 8px rgba(255, 0, 0, 0.4);
-      cursor: pointer;
-      display: flex;
-      flex-direction: column;
-      transition: transform 0.15s ease;
-    }
-    .video-card:hover {
-      transform: scale(1.03);
-    }
-    .thumbnail {
-      width: 100%;
-      height: 180px;
-      object-fit: cover;
-      background: black;
-    }
-    .video-info {
-      padding: 0.8rem 1rem;
-      flex-grow: 1;
-      display: flex;
-      flex-direction: column;
-      justify-content: space-between;
-    }
-    .video-title {
-      font-weight: 700;
-      font-size: 1.1rem;
-      margin-bottom: 0.3rem;
-      line-height: 1.2;
-      color: #f44336;
-      user-select: text;
-    }
-    .video-desc {
-      font-size: 0.9rem;
-      color: #ccc;
-      flex-grow: 1;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      user-select: text;
-    }
-    .video-stats {
-      margin-top: 0.6rem;
-      font-size: 0.8rem;
-      color: #aaa;
-      user-select: none;
-    }
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Lecteur vidéo local — Sans compte</title>
+<style>
+  :root{
+    --bg:#0b0f13;
+    --card:#0f1720;
+    --muted:#9aa6b2;
+    --accent:#ef4444; /* rouge upload */
+    --white:#ffffff;
+    --radius:12px;
+  }
+  *{box-sizing:border-box}
+  html,body{height:100%}
+  body{
+    margin:0;
+    font-family:Inter,ui-sans-serif,system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial;
+    background:linear-gradient(180deg,var(--bg),#071014 120%);
+    color:var(--white);
+    -webkit-font-smoothing:antialiased;
+    -moz-osx-font-smoothing:grayscale;
+    padding:24px;
+  }
 
-    /* Modal */
-    #modal {
-      position: fixed;
-      top: 0; left: 0;
-      width: 100vw; height: 100vh;
-      background: rgba(0,0,0,0.95);
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      visibility: hidden;
-      opacity: 0;
-      transition: opacity 0.3s ease;
-      z-index: 100;
-      flex-direction: column;
-      padding: 1rem;
-    }
-    #modal.visible {
-      visibility: visible;
-      opacity: 1;
-    }
-    #modal video {
-      max-width: 90vw;
-      max-height: 70vh;
-      border-radius: 10px;
-      box-shadow: 0 0 25px #d32f2f;
-      background: black;
-    }
-    #modalClose {
-      margin-top: 1rem;
-      color: #d32f2f;
-      font-size: 2rem;
-      font-weight: 700;
-      cursor: pointer;
-      user-select: none;
-      transition: color 0.3s ease;
-    }
-    #modalClose:hover {
-      color: #f44336;
-    }
+  /* Layout */
+  .app{max-width:1100px;margin:0 auto;display:grid;grid-template-columns:1fr 340px;gap:20px;align-items:start}
+  header{display:flex;align-items:center;gap:12px;margin-bottom:8px}
+  /* Removed .logo */
+  h1{margin:0;font-size:1.25rem}
+  .subtitle{color:var(--muted);font-size:0.9rem;margin-top:6px}
 
-    /* Floating upload button */
-    #uploadBtn {
-      position: fixed;
-      bottom: 30px;
-      right: 30px;
-      background: #d32f2f;
-      color: white;
-      border: none;
-      font-size: 3rem;
-      line-height: 1;
-      width: 60px;
-      height: 60px;
-      border-radius: 50%;
-      cursor: pointer;
-      box-shadow: 0 4px 10px rgba(211, 47, 47, 0.6);
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      user-select: none;
-      transition: background-color 0.3s ease;
-      z-index: 101;
-    }
-    #uploadBtn:hover {
-      background: #b71c1c;
-    }
-    @media (max-width: 768px) {
-      main {
-        flex-direction: column;
-        padding: 1rem;
-      }
-      #uploadSection {
-        max-height: none;
-        margin-bottom: 1rem;
-      }
-      #videoList {
-        padding-right: 0;
-        grid-template-columns: 1fr;
-      }
-    }
-  </style>
+  /* Main column cards */
+  .card{background:linear-gradient(180deg,var(--card),#071018);border-radius:var(--radius);padding:16px;box-shadow:0 8px 30px rgba(2,6,23,.6);border:1px solid rgba(255,255,255,0.03)}
+  .controls{display:flex;gap:8px;align-items:center;justify-content:space-between;margin-bottom:12px}
+  .tabs{display:flex;gap:8px}
+  .tab{padding:8px 12px;border-radius:999px;background:transparent;border:1px solid rgba(255,255,255,0.04);cursor:pointer;color:var(--muted);font-size:0.9rem}
+  .tab.active{background:rgba(255,255,255,0.04);color:var(--white);border-color:rgba(255,255,255,0.06)}
+
+  /* video list */
+  .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(220px,1fr));gap:12px}
+  .video-card{background:linear-gradient(180deg,#071018,#0b1116);padding:10px;border-radius:10px;border:1px solid rgba(255,255,255,0.03);display:flex;flex-direction:column;gap:8px}
+  .thumb{background:#000;border-radius:8px;height:130px;display:flex;align-items:center;justify-content:center;overflow:hidden;position:relative}
+  .thumb video{width:100%;height:100%;object-fit:cover;filter:brightness(.9)}
+  .meta{font-size:0.9rem}
+  .meta h3{margin:0;font-size:0.95rem}
+  .meta p{margin:4px 0 0;color:var(--muted);font-size:0.85rem;height:2.2em;overflow:hidden}
+  .row{display:flex;gap:8px;align-items:center;justify-content:space-between}
+  .btn{background:transparent;border:1px solid rgba(255,255,255,0.04);padding:6px 10px;border-radius:8px;color:var(--muted);cursor:pointer;font-size:0.85rem}
+  .icon-btn{display:inline-flex;align-items:center;justify-content:center;width:36px;height:36px;border-radius:8px;background:transparent;border:1px solid rgba(255,255,255,0.03);cursor:pointer}
+
+  /* right column */
+  aside .card{position:sticky;top:24px}
+  .small{font-size:0.85rem;color:var(--muted)}
+
+  /* Floating upload button - removed icon */
+  .upload-fab{
+    position:fixed;right:22px;bottom:22px;width:64px;height:64px;border-radius:50%;
+    background:var(--accent);display:flex;align-items:center;justify-content:center;color:var(--white);
+    box-shadow:0 12px 30px rgba(239,68,68,0.25);cursor:pointer;border:4px solid rgba(255,255,255,0.03);z-index:9999;
+    font-weight:700;
+    font-size:1.5rem;
+  }
+  .upload-fab:hover{transform:translateY(-3px);transition:transform .14s ease}
+
+  /* modal */
+  .modal-back{position:fixed;inset:0;background:rgba(2,6,23,0.6);display:flex;align-items:center;justify-content:center;z-index:10000}
+  .modal{width:min(720px,96%);border-radius:12px;padding:18px;background:linear-gradient(180deg,#071018,#0b1116);border:1px solid rgba(255,255,255,0.03)}
+  label{display:block;margin-bottom:6px;font-size:0.85rem;color:var(--muted)}
+  input[type="text"], textarea{width:100%;padding:10px;border-radius:8px;border:1px solid rgba(255,255,255,0.04);background:transparent;color:var(--white);outline:none;font-size:0.95rem}
+  textarea{resize:vertical;min-height:90px}
+  .form-row{display:flex;gap:8px}
+  .muted{color:var(--muted);font-size:0.85rem}
+
+  /* video player overlay */
+  .player-overlay{position:fixed;inset:0;background:rgba(2,6,23,0.85);display:flex;align-items:center;justify-content:center;z-index:10001;padding:20px}
+  .player-box{width:min(1100px,98%);max-height:86vh;border-radius:12px;background:#071018;padding:12px}
+  .player-meta{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:8px}
+
+  /* responsive */
+  @media (max-width:980px){
+    .app{grid-template-columns:1fr; padding-bottom:90px}
+    aside{order:2}
+  }
+</style>
 </head>
 <body>
+  <header>
+    <h1>Soan</h1>
+    <div class="subtitle">Uploader et regarder des vidéos sans compte — stockage local (IndexedDB)</div>
+  </header>
 
-<header>Soan</header>
+  <div class="app">
+    <main>
+      <section class="card">
+        <div class="controls">
+          <div class="tabs" role="tablist" aria-label="Sections">
+            <button class="tab active" data-tab="most">Les plus vues</button>
+            <button class="tab" data-tab="fav">Favoris</button>
+          </div>
+          <div style="display:flex;gap:8px;align-items:center">
+            <div class="small" id="count-videos">0 vidéos</div>
+            <button class="btn" id="clear-all">Vider tout</button>
+          </div>
+        </div>
 
-<main>
-  <section id="uploadSection" aria-label="Formulaire d'upload vidéo">
-    <h2>Uploader une vidéo</h2>
-    <label for="titleInput">Titre</label>
-    <input id="titleInput" type="text" maxlength="100" placeholder="Titre de la vidéo" />
-    <label for="descInput">Description</label>
-    <textarea id="descInput" rows="4" maxlength="300" placeholder="Description de la vidéo"></textarea>
-    <input type="file" id="fileInput" accept="video/*" />
-    <label for="fileInput" id="fileLabel" tabindex="0" role="button" aria-label="Choisir un fichier vidéo">Choisir une vidéo</label>
-    <button id="uploadSubmit" disabled>Uploader</button>
-  </section>
+        <div id="content">
+          <div class="grid" id="videos-grid"></div>
+        </div>
+      </section>
+    </main>
 
-  <section id="videoList" aria-label="Liste des vidéos"></section>
-</main>
+    <aside>
+      <div class="card">
+        <h3>Infos</h3>
+        <p class="small">Upload via le bouton rouge en bas à droite. Aucune connexion demandée. Les vidéos restent sur cet appareil/navigateur.</p>
+        <hr style="opacity:.06;margin:12px 0">
+        <div>
+          <div class="small">Témoignage technique</div>
+          <p class="muted">La base utilise IndexedDB pour stocker blobs vidéo et métadonnées. Attends quelques secondes après upload pour traitement.</p>
+        </div>
+        <hr style="opacity:.06;margin:12px 0">
+        <div class="small">Raccourcis</div>
+        <p class="muted">Cliquer sur une miniature ouvre le lecteur et incrémente les vues.</p>
+      </div>
+    </aside>
+  </div>
 
-<button id="uploadBtn" title="Ouvrir le formulaire d'upload" aria-label="Ouvrir le formulaire d'upload">+</button>
+  <!-- Floating upload button with no icon, just text "+" -->
+  <div class="upload-fab" id="fab" title="Uploader une vidéo" aria-label="Uploader une vidéo">+</div>
 
-<!-- Modal vidéo -->
-<div id="modal" aria-hidden="true">
-  <video controls></video>
-  <button id="modalClose" aria-label="Fermer la vidéo">✕</button>
-</div>
+  <!-- hidden file input -->
+  <input type="file" id="file-input" accept="video/*" style="display:none" />
 
-<script>
-  const uploadBtn = document.getElementById('uploadBtn');
-  const uploadSection = document.getElementById('uploadSection');
-  const titleInput = document.getElementById('titleInput');
-  const descInput = document.getElementById('descInput');
-  const fileInput = document.getElementById('fileInput');
-  const fileLabel = document.getElementById('fileLabel');
-  const uploadSubmit = document.getElementById('uploadSubmit');
-  const videoList = document.getElementById('videoList');
-  const modal = document.getElementById('modal');
-  const modalVideo = modal.querySelector('video');
-  const modalClose = document.getElementById('modalClose');
+  <!-- Upload modal -->
+  <div id="modal-root" style="display:none"></div>
 
-  // Tableau des vidéos {title, description, dataURL, views}
-  let videos = [];
-
-  // Fonction pour créer la miniature (on prend une frame à 1s si possible)
-  // Ici on utilisera la vidéo elle-même comme thumbnail (simplifié)
-  function createVideoCard(videoObj, index) {
-    const card = document.createElement('article');
-    card.className = 'video-card';
-    card.tabIndex = 0;
-    card.setAttribute('role', 'button');
-    card.setAttribute('aria-label', `Lire la vidéo: ${videoObj.title}`);
-
-    // Thumbnail video
-    const thumb = document.createElement('video');
-    thumb.className = 'thumbnail';
-    thumb.src = videoObj.dataURL;
-    thumb.muted = true;
-    thumb.preload = 'metadata';
-    thumb.loop = true;
-    thumb.playsInline = true;
-    thumb.style.objectFit = 'cover';
-   
+  <!-- player overlay -->
+  <div id="player-root" style="
