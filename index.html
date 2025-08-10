@@ -3,60 +3,131 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Soan avec étoiles animées</title>
+<title>Soan & YouTube</title>
 <style>
+  /* Reset & base */
+  * {
+    box-sizing: border-box;
+  }
   body {
+    margin: 0;
     background: #121212;
     color: white;
-    font-family: 'Arial Black', Arial, sans-serif;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     display: flex;
-    justify-content: center;
+    flex-direction: column;
     align-items: center;
-    height: 100vh;
-    margin: 0;
+    padding: 2rem;
+    min-height: 100vh;
   }
 
+  /* Soan title */
   .soan-container {
     position: relative;
-    font-size: 4rem;
-    font-weight: bold;
+    font-size: 5rem;
+    font-weight: 900;
     color: #ffdd00;
     text-transform: uppercase;
-    letter-spacing: 0.2em;
+    letter-spacing: 0.3em;
+    margin-bottom: 3rem;
   }
 
+  /* Stars */
   .stars {
     position: absolute;
     top: 50%;
     left: 50%;
-    width: 200%;
-    height: 200%;
+    width: 250%;
+    height: 250%;
     pointer-events: none;
     transform: translate(-50%, -50%);
     overflow: visible;
+    z-index: -1;
   }
 
   .star {
     position: absolute;
     color: #fff;
-    font-size: 1.2rem;
-    animation: twinkle 2s infinite ease-in-out;
+    font-size: 1.4rem;
+    animation: twinkle 3s infinite ease-in-out;
+    filter: drop-shadow(0 0 3px #fff);
   }
 
-  /* Création aléatoire de positions pour les étoiles */
-  .star:nth-child(1) { top: 10%; left: 20%; animation-delay: 0s; }
-  .star:nth-child(2) { top: 25%; left: 70%; animation-delay: 0.5s; }
-  .star:nth-child(3) { top: 60%; left: 50%; animation-delay: 1s; }
+  /* Position étoiles */
+  .star:nth-child(1) { top: 5%; left: 20%; animation-delay: 0s; }
+  .star:nth-child(2) { top: 30%; left: 80%; animation-delay: 1s; }
+  .star:nth-child(3) { top: 60%; left: 50%; animation-delay: 2s; }
   .star:nth-child(4) { top: 75%; left: 15%; animation-delay: 1.5s; }
-  .star:nth-child(5) { top: 40%; left: 80%; animation-delay: 0.7s; }
+  .star:nth-child(5) { top: 40%; left: 70%; animation-delay: 0.7s; }
+  .star:nth-child(6) { top: 20%; left: 45%; animation-delay: 1.8s; }
+  .star:nth-child(7) { top: 55%; left: 85%; animation-delay: 0.3s; }
 
   @keyframes twinkle {
     0%, 100% { opacity: 1; }
     50% { opacity: 0.3; }
   }
+
+  /* Section YouTube */
+  .youtube-section {
+    width: 100%;
+    max-width: 900px;
+  }
+
+  .youtube-video {
+    position: relative;
+    padding-bottom: 56.25%; /* 16:9 ratio */
+    padding-top: 25px;
+    height: 0;
+    margin-bottom: 2rem;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 4px 15px rgba(255, 221, 0, 0.4);
+  }
+
+  .youtube-video iframe {
+    position: absolute;
+    top: 0; left: 0;
+    width: 100%;
+    height: 100%;
+    border: none;
+  }
+
+  /* Responsive cards for multiple videos */
+  .video-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit,minmax(280px,1fr));
+    gap: 1.5rem;
+  }
+
+  .video-card {
+    background: #222;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 4px 10px rgba(255, 221, 0, 0.3);
+    transition: transform 0.3s ease;
+  }
+
+  .video-card:hover {
+    transform: scale(1.05);
+  }
+
+  .video-card iframe {
+    width: 100%;
+    height: 160px;
+    border: none;
+  }
+
+  .video-title {
+    padding: 0.8rem 1rem;
+    font-weight: 600;
+    font-size: 1rem;
+    color: #ffdd00;
+  }
+
 </style>
 </head>
 <body>
+
   <div class="soan-container">
     Soan
     <div class="stars">
@@ -65,7 +136,29 @@
       <span class="star">★</span>
       <span class="star">★</span>
       <span class="star">★</span>
+      <span class="star">★</span>
+      <span class="star">★</span>
     </div>
   </div>
+
+  <section class="youtube-section">
+    <h2 style="color:#ffdd00; margin-bottom:1rem; font-weight:800;">Vidéos YouTube</h2>
+    <div class="video-grid">
+      <!-- Exemple de carte vidéo -->
+      <div class="video-card">
+        <iframe src="https://www.youtube.com/embed/dQw4w9WgXcQ" title="Vidéo 1" allowfullscreen></iframe>
+        <div class="video-title">Titre Vidéo 1</div>
+      </div>
+      <div class="video-card">
+        <iframe src="https://www.youtube.com/embed/3JZ_D3ELwOQ" title="Vidéo 2" allowfullscreen></iframe>
+        <div class="video-title">Titre Vidéo 2</div>
+      </div>
+      <div class="video-card">
+        <iframe src="https://www.youtube.com/embed/oHg5SJYRHA0" title="Vidéo 3" allowfullscreen></iframe>
+        <div class="video-title">Titre Vidéo 3</div>
+      </div>
+    </div>
+  </section>
+
 </body>
 </html>
