@@ -7,12 +7,17 @@
 <style>
   @import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@600&display=swap');
 
-  body {
+  body, html {
     margin: 0;
+    padding: 0;
+    height: 100%;
     background: #121212;
     color: #fff;
     font-family: 'Montserrat', sans-serif;
-    display: flex;
+    user-select: none;
+  }
+  #app {
+    display: none;
     flex-direction: column;
     align-items: center;
     padding: 1rem;
@@ -81,6 +86,7 @@
     flex-direction: column;
     cursor: pointer;
     transition: transform 0.2s ease;
+    position: relative;
   }
   .video-card:hover {
     transform: scale(1.04);
@@ -212,6 +218,7 @@
     color: white;
     font-weight: 600;
     user-select: none;
+    position: relative;
   }
   .modal h2 {
     margin-top: 0;
@@ -271,55 +278,138 @@
     border-radius: 10px;
     background: black;
   }
-  .player-modal .modal .close-btn {
-    background: #ff4444;
-    margin-top: 0.8rem;
-    width: 100%;
+  .player-modal .close-btn {
+    position: absolute;
+    top: 12px;
+    right: 18px;
+    font-size: 1.8rem;
+    color: #ffdd00;
+    background: none;
+    border: none;
+    cursor: pointer;
+    user-select: none;
+  }
+
+  /* Splash Screen */
+  #splash {
+    position: fixed;
+    inset: 0;
+    background: #121212;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    z-index: 11000;
+    user-select: none;
+  }
+  #splash .soan-logo {
+    font-size: 5rem;
+    font-weight: 900;
+    color: #ffdd00;
+    text-transform: uppercase;
+    letter-spacing: 0.5em;
+    position: relative;
+    margin-bottom: 3rem;
+  }
+  #splash .stars {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    width: 300%;
+    height: 300%;
+    pointer-events: none;
+    transform: translate(-50%, -50%);
+    z-index: -1;
+  }
+  #splash input[type="password"] {
+    font-size: 1.4rem;
+    padding: 0.8rem 1rem;
+    border-radius: 10px;
+    border: 2px solid #ffdd00;
+    background: transparent;
+    color: white;
+    width: 280px;
+    max-width: 90vw;
+    text-align: center;
+    letter-spacing: 0.2em;
+    font-weight: 700;
+  }
+  #splash button {
+    margin-top: 1.5rem;
+    padding: 0.7rem 2.2rem;
     font-size: 1.2rem;
+    font-weight: 700;
+    background: #ffdd00;
+    color: black;
+    border-radius: 15px;
+    border: none;
+    cursor: pointer;
+    transition: background-color 0.3s ease;
+    user-select: none;
+  }
+  #splash button:hover {
+    background: #e6c800;
   }
 </style>
 </head>
 <body>
 
-  <div class="soan-container">
-    Soan
-    <div class="stars">
-      <span class="star">★</span>
-      <span class="star">★</span>
-      <span class="star">★</span>
-      <span class="star">★</span>
-      <span class="star">★</span>
+<!-- Splash screen with code input -->
+<div id="splash">
+  <div class="soan-logo">
+    SOAN
+    <div class="stars" aria-hidden="true">
+      <div class="star" style="top:10%; left:20%;">⭐</div>
+      <div class="star" style="top:30%; left:70%;">⭐</div>
+      <div class="star" style="top:60%; left:50%;">⭐</div>
+      <div class="star" style="top:75%; left:15%;">⭐</div>
+      <div class="star" style="top:40%; left:80%;">⭐</div>
+    </div>
+  </div>
+  <input type="password" id="entryCode" placeholder="Entrer le code d'accès" aria-label="Code d'accès" autocomplete="off" />
+  <button id="entryBtn">Entrer</button>
+</div>
+
+<!-- Main app -->
+<div id="app" role="main" aria-live="polite" aria-label="Galerie vidéo">
+
+  <div class="soan-container" aria-hidden="true">
+    SOAN
+    <div class="stars" aria-hidden="true">
+      <div class="star">⭐</div>
+      <div class="star">⭐</div>
+      <div class="star">⭐</div>
+      <div class="star">⭐</div>
+      <div class="star">⭐</div>
     </div>
   </div>
 
   <div class="sort-container">
-    <label for="sort">Trier par : </label>
-    <select id="sort">
+    <label for="sortSelect">Trier par :</label>
+    <select id="sortSelect" aria-label="Trier les vidéos">
       <option value="title">Titre</option>
       <option value="likes">Likes</option>
       <option value="fav">Favoris</option>
-    </select>
+  </select>
   </div>
 
-  <div class="video-grid" id="videoGrid" aria-live="polite" aria-label="Liste des vidéos"></div>
+  <div class="video-grid" id="videoGrid" role="list" aria-label="Liste des vidéos"></div>
 
-  <button id="addVideoBtn" title="Ajouter une vidéo">+</button>
+  <button id="addVideoBtn" aria-label="Ajouter une vidéo" title="Ajouter une vidéo">+</button>
 
-  <div id="errorOverlay" role="alert" aria-live="assertive"></div>
-
-  <!-- Modal Ajouter vidéo -->
-  <div class="modal-bg" id="addModal" role="dialog" aria-modal="true" aria-labelledby="modalTitle" tabindex="-1">
+  <!-- Modal Ajout Vidéo -->
+  <div class="modal-bg" id="addModal" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="addModalTitle">
     <div class="modal">
-      <h2 id="modalTitle">Ajouter une vidéo</h2>
+      <h2 id="addModalTitle">Ajouter une vidéo</h2>
       <form id="addVideoForm">
         <label for="codeInput">Code d’accès</label>
-        <input type="password" id="codeInput" required autocomplete="off" />
-        <label for="urlInput">Lien vidéo (YouTube, Vimeo, MP4)</label>
-        <input type="text" id="urlInput" placeholder="https://..." required />
+        <input type="password" id="codeInput" name="codeInput" autocomplete="off" required />
+        <label for="urlInput">Lien vidéo (YouTube, Vimeo ou MP4)</label>
+        <input type="text" id="urlInput" name="urlInput" required />
         <label for="titleInput">Titre</label>
-        <input type="text" id="titleInput" placeholder="Titre de la vidéo" required />
+        <input type="text" id="titleInput" name="titleInput" required />
         <label for="descInput">Description</label>
-        <textarea id="descInput" placeholder="Description facultative"></textarea>
+        <textarea id="descInput" name="descInput"></textarea>
         <div class="modal-actions">
           <button type="submit">Ajouter</button>
           <button type="button" id="cancelAddBtn">Annuler</button>
@@ -328,138 +418,195 @@
     </div>
   </div>
 
-  <!-- Modal Player vidéo -->
-  <div class="modal-bg player-modal" id="playerModal" role="dialog" aria-modal="true" aria-label="Lecteur vidéo" tabindex="-1">
+  <!-- Modal Player Vidéo -->
+  <div class="modal-bg player-modal" id="playerModal" aria-hidden="true" role="dialog" aria-modal="true" aria-labelledby="playerModalTitle">
     <div class="modal">
-      <div id="playerContainer"></div>
-      <button class="close-btn" id="closePlayerBtn">Fermer</button>
+      <button class="close-btn" aria-label="Fermer la vidéo" title="Fermer la vidéo">&times;</button>
+      <div id="playerContainer" aria-live="polite" aria-atomic="true"></div>
     </div>
   </div>
 
-<script>
-  const videoGrid = document.getElementById('videoGrid');
-  const sortSelect = document.getElementById('sort');
-  const addVideoBtn = document.getElementById('addVideoBtn');
-  const errorOverlay = document.getElementById('errorOverlay');
+</div>
 
+<!-- Notification -->
+<div id="errorOverlay" role="alert" aria-live="assertive"></div>
+
+<script>
+  const SECRET_CODE = "soan2025";
+
+  // Splash screen elements
+  const splash = document.getElementById('splash');
+  const entryCodeInput = document.getElementById('entryCode');
+  const entryBtn = document.getElementById('entryBtn');
+  const app = document.getElementById('app');
+
+  // Main app elements
+  const videoGrid = document.getElementById('videoGrid');
+  const addVideoBtn = document.getElementById('addVideoBtn');
   const addModal = document.getElementById('addModal');
   const addVideoForm = document.getElementById('addVideoForm');
   const cancelAddBtn = document.getElementById('cancelAddBtn');
-
   const playerModal = document.getElementById('playerModal');
   const playerContainer = document.getElementById('playerContainer');
-  const closePlayerBtn = document.getElementById('closePlayerBtn');
+  const closePlayerBtn = playerModal.querySelector('.close-btn');
+  const errorOverlay = document.getElementById('errorOverlay');
+  const sortSelect = document.getElementById('sortSelect');
 
   let videos = [];
 
-  function showError(message) {
-    errorOverlay.textContent = message;
+  // Afficher notification d'erreur
+  function showError(msg) {
+    errorOverlay.textContent = msg;
     errorOverlay.classList.add('show');
-    setTimeout(() => {
+    clearTimeout(showError.timeout);
+    showError.timeout = setTimeout(() => {
       errorOverlay.classList.remove('show');
-    }, 4500);
+    }, 3500);
   }
 
+  // Sauvegarder vidéos en localStorage
   function saveVideos() {
-    try {
-      localStorage.setItem('videosMeta', JSON.stringify(videos));
-    } catch (err) {
-      showError("Erreur stockage local : " + err.message);
-    }
+    localStorage.setItem('videos', JSON.stringify(videos));
   }
 
+  // Charger vidéos depuis localStorage
   function loadVideos() {
     try {
-      const stored = localStorage.getItem('videosMeta');
+      const stored = localStorage.getItem('videos');
       return stored ? JSON.parse(stored) : [];
-    } catch (err) {
-      showError("Erreur lecture stockage local : " + err.message);
+    } catch {
       return [];
     }
   }
 
-  // Convertit un lien YouTube en URL embed
-  function getYouTubeEmbedUrl(url) {
-    try {
-      const urlObj = new URL(url);
-      if (urlObj.hostname.includes('youtube.com')) {
-        const v = urlObj.searchParams.get('v');
-        if(v) return `https://www.youtube.com/embed/${v}`;
-      } else if (urlObj.hostname === 'youtu.be') {
-        const id = urlObj.pathname.slice(1);
-        if(id) return `https://www.youtube.com/embed/${id}`;
-      }
-    } catch {
-      return null;
-    }
-    return null;
-  }
-
-  // Crée une preview (iframe ou video)
+  // Créer aperçu vidéo (iframe ou video HTML)
   function createPreviewElement(video) {
-    if (video.url.includes('youtube.com') || video.url.includes('youtu.be')) {
-      const iframe = document.createElement('iframe');
-      iframe.src = getYouTubeEmbedUrl(video.url);
-      iframe.allow = "accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture";
-      iframe.allowFullscreen = true;
-      iframe.className = "video-preview";
-      iframe.setAttribute('title', video.title);
-      iframe.setAttribute('aria-label', `Aperçu vidéo ${video.title}`);
-      iframe.tabIndex = -1;
-      return iframe;
-    } else {
-      const videoEl = document.createElement('video');
-      videoEl.src = video.url;
-      videoEl.controls = false;
-      videoEl.muted = true;
-      videoEl.loop = true;
-      videoEl.autoplay = true;
-      videoEl.className = "video-preview";
-      videoEl.setAttribute('aria-label', `Aperçu vidéo ${video.title}`);
-      videoEl.tabIndex = -1;
-      return videoEl;
+    if (/youtu\.be|youtube\.com/.test(video.url)) {
+      // Extraire ID YouTube
+      let ytId = null;
+      const ytMatch = video.url.match(/(?:youtu\.be\/|v=)([a-zA-Z0-9_-]{11})/);
+      if(ytMatch) ytId = ytMatch[1];
+      else {
+        // Par exemple https://www.youtube.com/embed/...
+        const embedMatch = video.url.match(/youtube\.com\/embed\/([a-zA-Z0-9_-]{11})/);
+        if(embedMatch) ytId = embedMatch[1];
+      }
+      if(ytId) {
+        const iframe = document.createElement('iframe');
+        iframe.className = "video-preview";
+        iframe.src = `https://www.youtube.com/embed/${ytId}?rel=0&modestbranding=1&autohide=1&mute=1&controls=0&showinfo=0&autoplay=1&loop=1&playlist=${ytId}`;
+        iframe.allow = "autoplay; encrypted-media";
+        iframe.setAttribute('allowfullscreen', '');
+        iframe.setAttribute('title', `Aperçu de la vidéo ${video.title}`);
+        iframe.loading = "lazy";
+        return iframe;
+      }
+    } else if (/vimeo\.com/.test(video.url)) {
+      // Extraire ID Vimeo
+      const vmMatch = video.url.match(/vimeo\.com\/(\d+)/);
+      if(vmMatch) {
+        const iframe = document.createElement('iframe');
+        iframe.className = "video-preview";
+        iframe.src = `https://player.vimeo.com/video/${vmMatch[1]}?background=1&autoplay=1&loop=1&muted=1`;
+        iframe.allow = "autoplay; fullscreen";
+        iframe.setAttribute('allowfullscreen', '');
+        iframe.setAttribute('title', `Aperçu de la vidéo ${video.title}`);
+        iframe.loading = "lazy";
+        return iframe;
+      }
+    } else if (video.url.match(/\.(mp4|webm|ogg)$/i)) {
+      const vid = document.createElement('video');
+      vid.className = "video-preview";
+      vid.src = video.url;
+      vid.muted = true;
+      vid.autoplay = true;
+      vid.loop = true;
+      vid.playsInline = true;
+      vid.setAttribute('title', `Aperçu de la vidéo ${video.title}`);
+      return vid;
     }
+    // Fallback simple
+    const div = document.createElement('div');
+    div.style.background = '#333';
+    div.style.height = '180px';
+    div.style.display = 'flex';
+    div.style.alignItems = 'center';
+    div.style.justifyContent = 'center';
+    div.textContent = "Aperçu non disponible";
+    return div;
   }
 
-  // Crée lecteur complet dans modale
+  // Créer player vidéo complet
   function createPlayerElement(video) {
-    if (video.url.includes('youtube.com') || video.url.includes('youtu.be')) {
-      const iframe = document.createElement('iframe');
-      iframe.src = getYouTubeEmbedUrl(video.url) + '?autoplay=1';
-      iframe.allow = "accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture";
-      iframe.allowFullscreen = true;
-      iframe.style.width = '100%';
-      iframe.style.height = '500px';
-      iframe.setAttribute('title', video.title);
-      return iframe;
-    } else {
-      const videoEl = document.createElement('video');
-      videoEl.src = video.url;
-      videoEl.controls = true;
-      videoEl.autoplay = true;
-      videoEl.style.width = '100%';
-      videoEl.style.maxHeight = '500px';
-      return videoEl;
+    if (/youtu\.be|youtube\.com/.test(video.url)) {
+      // ID YouTube
+      let ytId = null;
+      const ytMatch = video.url.match(/(?:youtu\.be\/|v=)([a-zA-Z0-9_-]{11})/);
+      if(ytMatch) ytId = ytMatch[1];
+      else {
+        const embedMatch = video.url.match(/youtube\.com\/embed\/([a-zA-Z0-9_-]{11})/);
+        if(embedMatch) ytId = embedMatch[1];
+      }
+      if(ytId) {
+        const iframe = document.createElement('iframe');
+        iframe.src = `https://www.youtube.com/embed/${ytId}?rel=0&modestbranding=1&autoplay=1&loop=1&playlist=${ytId}`;
+        iframe.allow = "autoplay; encrypted-media";
+        iframe.setAttribute('allowfullscreen', '');
+        iframe.title = video.title;
+        iframe.width = "100%";
+        iframe.height = "500";
+        return iframe;
+      }
+    } else if (/vimeo\.com/.test(video.url)) {
+      const vmMatch = video.url.match(/vimeo\.com\/(\d+)/);
+      if(vmMatch) {
+        const iframe = document.createElement('iframe');
+        iframe.src = `https://player.vimeo.com/video/${vmMatch[1]}?autoplay=1`;
+        iframe.allow = "autoplay; fullscreen";
+        iframe.setAttribute('allowfullscreen', '');
+        iframe.title = video.title;
+        iframe.width = "100%";
+        iframe.height = "500";
+        return iframe;
+      }
+    } else if (video.url.match(/\.(mp4|webm|ogg)$/i)) {
+      const vid = document.createElement('video');
+      vid.src = video.url;
+      vid.controls = true;
+      vid.autoplay = true;
+      vid.playsInline = true;
+      vid.style.width = "100%";
+      vid.style.maxHeight = "500px";
+      vid.title = video.title;
+      return vid;
     }
+    const div = document.createElement('div');
+    div.textContent = "Impossible de lire cette vidéo";
+    div.style.padding = "2rem";
+    return div;
   }
 
+  // Afficher la liste des vidéos
   function renderVideos() {
     videoGrid.innerHTML = '';
+    // Trier selon sélection
     let sorted = [...videos];
-    if (sortSelect.value === 'title') {
+    const sortBy = sortSelect.value;
+    if(sortBy === "title") {
       sorted.sort((a,b) => a.title.localeCompare(b.title));
-    } else if (sortSelect.value === 'likes') {
+    } else if(sortBy === "likes") {
       sorted.sort((a,b) => b.likes - a.likes);
-    } else if (sortSelect.value === 'fav') {
-      sorted.sort((a,b) => (b.fav ? 1 : 0) - (a.fav ? 1 : 0));
+    } else if(sortBy === "fav") {
+      sorted = sorted.filter(v => v.fav);
     }
-    sorted.forEach((vid, i) => {
+
+    sorted.forEach(vid => {
       const card = document.createElement('div');
       card.className = 'video-card';
-      card.setAttribute('role', 'button');
-      card.setAttribute('tabindex', '0');
-      card.setAttribute('aria-label', `Ouvrir vidéo ${vid.title}`);
-      
+      card.tabIndex = 0;
+      card.setAttribute('role','listitem');
+      card.setAttribute('aria-label', `Vidéo: ${vid.title}`);
+
       const preview = createPreviewElement(vid);
       card.appendChild(preview);
 
@@ -477,22 +624,29 @@
       const actions = document.createElement('div');
       actions.className = 'video-actions';
 
+      // Like button
       const likeBtn = document.createElement('button');
-      likeBtn.className = 'btn' + (vid.liked ? ' liked' : '');
+      likeBtn.className = 'btn';
       likeBtn.textContent = `👍 ${vid.likes}`;
-      likeBtn.setAttribute('aria-pressed', vid.liked);
+      if(vid.liked) likeBtn.classList.add('liked');
       likeBtn.onclick = (e) => {
         e.stopPropagation();
-        vid.liked = !vid.liked;
-        vid.likes += vid.liked ? 1 : -1;
+        if(!vid.liked) {
+          vid.likes++;
+          vid.liked = true;
+        } else {
+          vid.likes--;
+          vid.liked = false;
+        }
         saveVideos();
         renderVideos();
       };
 
+      // Fav button
       const favBtn = document.createElement('button');
-      favBtn.className = 'btn' + (vid.fav ? ' fav' : '');
-      favBtn.textContent = '★';
-      favBtn.setAttribute('aria-pressed', vid.fav);
+      favBtn.className = 'btn';
+      favBtn.textContent = vid.fav ? '★ Favori' : '☆ Favori';
+      if(vid.fav) favBtn.classList.add('fav');
       favBtn.onclick = (e) => {
         e.stopPropagation();
         vid.fav = !vid.fav;
@@ -500,8 +654,27 @@
         renderVideos();
       };
 
+      // Delete button
+      const delBtn = document.createElement('button');
+      delBtn.className = 'btn';
+      delBtn.textContent = '🗑️ Supprimer';
+      delBtn.onclick = (e) => {
+        e.stopPropagation();
+        // Demander code accès pour supprimer
+        const userCode = prompt("Entrez le code d'accès pour supprimer cette vidéo:");
+        if(userCode === SECRET_CODE) {
+          videos = videos.filter(v => v.url !== vid.url);
+          saveVideos();
+          renderVideos();
+          showError("Vidéo supprimée");
+        } else {
+          showError("Code d'accès incorrect, suppression annulée");
+        }
+      };
+
       actions.appendChild(likeBtn);
       actions.appendChild(favBtn);
+      actions.appendChild(delBtn);
 
       info.appendChild(title);
       info.appendChild(desc);
@@ -528,26 +701,28 @@
     const player = createPlayerElement(video);
     playerContainer.appendChild(player);
     playerModal.classList.add('show');
+    playerModal.setAttribute('aria-hidden', 'false');
     playerModal.focus();
   }
 
   closePlayerBtn.onclick = () => {
     playerModal.classList.remove('show');
+    playerModal.setAttribute('aria-hidden', 'true');
     playerContainer.innerHTML = '';
   };
 
   // Gestion du formulaire d'ajout
 
-  const SECRET_CODE = "soan2025";
-
   addVideoBtn.onclick = () => {
     addModal.classList.add('show');
+    addModal.setAttribute('aria-hidden', 'false');
     addVideoForm.reset();
     addVideoForm.querySelector('#codeInput').focus();
   };
 
   cancelAddBtn.onclick = () => {
     addModal.classList.remove('show');
+    addModal.setAttribute('aria-hidden', 'true');
   };
 
   addVideoForm.onsubmit = (e) => {
@@ -582,35 +757,39 @@
       likes: 0,
       liked: false,
       fav: false,
-      addedAt: Date.now()
     });
 
     saveVideos();
     renderVideos();
     addModal.classList.remove('show');
+    addModal.setAttribute('aria-hidden', 'true');
   };
 
-  // Tri
-  sortSelect.onchange = () => {
-    renderVideos();
-  };
-
-  // Initialisation
-  videos = loadVideos();
-  renderVideos();
-
-  // Gestion focus & clavier modales
-  document.addEventListener('keydown', e => {
-    if(e.key === 'Escape') {
-      if(addModal.classList.contains('show')) {
-        addModal.classList.remove('show');
-      }
-      if(playerModal.classList.contains('show')) {
-        playerModal.classList.remove('show');
-        playerContainer.innerHTML = '';
-      }
+  // Gestion code d'accès splash screen
+  function checkEntryCode() {
+    const code = entryCodeInput.value.trim();
+    if (code === SECRET_CODE) {
+      splash.style.display = 'none';
+      app.style.display = 'block';
+      videos = loadVideos();
+      renderVideos();
+    } else {
+      showError("Code d’accès incorrect");
     }
-  });
+  }
+
+  entryBtn.onclick = checkEntryCode;
+  entryCodeInput.onkeypress = (e) => {
+    if (e.key === 'Enter') {
+      checkEntryCode();
+    }
+  };
+
+  // Trier vidéos
+  sortSelect.onchange = renderVideos;
+
+  // Initialisation: masquer app au départ
+  app.style.display = 'none';
 
 </script>
 
