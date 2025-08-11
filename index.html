@@ -3,127 +3,146 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Soan & YouTube</title>
+<title>Soan</title>
 <style>
-  /* Reset & base */
-  * {
-    box-sizing: border-box;
-  }
   body {
     margin: 0;
     background: #121212;
-    color: white;
+    color: #fff;
     font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     display: flex;
     flex-direction: column;
     align-items: center;
-    padding: 2rem;
-    min-height: 100vh;
+    padding: 1rem;
   }
 
-  /* Soan title */
+  /* Titre Soan + étoiles */
   .soan-container {
     position: relative;
-    font-size: 5rem;
+    font-size: 3rem;
     font-weight: 900;
     color: #ffdd00;
     text-transform: uppercase;
     letter-spacing: 0.3em;
-    margin-bottom: 3rem;
+    margin: 1rem 0 2rem;
   }
-
-  /* Stars */
   .stars {
     position: absolute;
     top: 50%;
     left: 50%;
-    width: 250%;
-    height: 250%;
+    width: 200%;
+    height: 200%;
     pointer-events: none;
     transform: translate(-50%, -50%);
-    overflow: visible;
     z-index: -1;
   }
-
   .star {
     position: absolute;
     color: #fff;
-    font-size: 1.4rem;
+    font-size: 1.2rem;
     animation: twinkle 3s infinite ease-in-out;
     filter: drop-shadow(0 0 3px #fff);
   }
-
-  /* Position étoiles */
-  .star:nth-child(1) { top: 5%; left: 20%; animation-delay: 0s; }
-  .star:nth-child(2) { top: 30%; left: 80%; animation-delay: 1s; }
+  .star:nth-child(1) { top: 10%; left: 20%; animation-delay: 0s; }
+  .star:nth-child(2) { top: 30%; left: 70%; animation-delay: 1s; }
   .star:nth-child(3) { top: 60%; left: 50%; animation-delay: 2s; }
   .star:nth-child(4) { top: 75%; left: 15%; animation-delay: 1.5s; }
-  .star:nth-child(5) { top: 40%; left: 70%; animation-delay: 0.7s; }
-  .star:nth-child(6) { top: 20%; left: 45%; animation-delay: 1.8s; }
-  .star:nth-child(7) { top: 55%; left: 85%; animation-delay: 0.3s; }
-
+  .star:nth-child(5) { top: 40%; left: 80%; animation-delay: 0.7s; }
   @keyframes twinkle {
     0%, 100% { opacity: 1; }
     50% { opacity: 0.3; }
   }
 
-  /* Section YouTube */
-  .youtube-section {
-    width: 100%;
-    max-width: 900px;
-  }
-
-  .youtube-video {
-    position: relative;
-    padding-bottom: 56.25%; /* 16:9 ratio */
-    padding-top: 25px;
-    height: 0;
-    margin-bottom: 2rem;
-    border-radius: 12px;
-    overflow: hidden;
-    box-shadow: 0 4px 15px rgba(255, 221, 0, 0.4);
-  }
-
-  .youtube-video iframe {
-    position: absolute;
-    top: 0; left: 0;
-    width: 100%;
-    height: 100%;
+  /* Bouton + */
+  .upload-btn {
+    background: #ff0000;
+    color: white;
+    font-size: 2rem;
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
     border: none;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    box-shadow: 0 4px 10px rgba(255,0,0,0.6);
+    z-index: 100;
+  }
+  .upload-btn:hover {
+    background: #cc0000;
   }
 
-  /* Responsive cards for multiple videos */
+  /* Tri */
+  .sort-container {
+    margin-bottom: 1rem;
+  }
+  select {
+    padding: 0.4rem;
+    background: #222;
+    color: white;
+    border-radius: 5px;
+    border: 1px solid #444;
+  }
+
+  /* Galerie vidéos */
   .video-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit,minmax(280px,1fr));
-    gap: 1.5rem;
-  }
-
-  .video-card {
-    background: #222;
-    border-radius: 12px;
-    overflow: hidden;
-    box-shadow: 0 4px 10px rgba(255, 221, 0, 0.3);
-    transition: transform 0.3s ease;
-  }
-
-  .video-card:hover {
-    transform: scale(1.05);
-  }
-
-  .video-card iframe {
+    gap: 1rem;
     width: 100%;
-    height: 160px;
-    border: none;
+    max-width: 1000px;
   }
-
+  .video-card {
+    background: #1e1e1e;
+    border-radius: 10px;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+  }
+  video {
+    width: 100%;
+    height: auto;
+    background: black;
+  }
+  .video-info {
+    padding: 0.8rem;
+  }
   .video-title {
-    padding: 0.8rem 1rem;
-    font-weight: 600;
-    font-size: 1rem;
-    color: #ffdd00;
+    font-weight: bold;
+    margin-bottom: 0.4rem;
   }
-
+  .video-desc {
+    font-size: 0.9rem;
+    color: #ccc;
+    margin-bottom: 0.6rem;
+  }
+  .video-actions {
+    display: flex;
+    gap: 0.5rem;
+  }
+  .btn {
+    flex: 1;
+    padding: 0.4rem;
+    background: #333;
+    color: white;
+    border: none;
+    cursor: pointer;
+    border-radius: 5px;
+  }
+  .btn:hover {
+    background: #555;
+  }
+  .liked {
+    background: #ffdd00;
+    color: black;
+  }
+  .fav {
+    background: #ff0000;
+  }
 </style>
 </head>
 <body>
@@ -136,29 +155,107 @@
       <span class="star">★</span>
       <span class="star">★</span>
       <span class="star">★</span>
-      <span class="star">★</span>
-      <span class="star">★</span>
     </div>
   </div>
 
-  <section class="youtube-section">
-    <h2 style="color:#ffdd00; margin-bottom:1rem; font-weight:800;">Vidéos YouTube</h2>
-    <div class="video-grid">
-      <!-- Exemple de carte vidéo -->
-      <div class="video-card">
-        <iframe src="https://www.youtube.com/embed/dQw4w9WgXcQ" title="Vidéo 1" allowfullscreen></iframe>
-        <div class="video-title">Titre Vidéo 1</div>
-      </div>
-      <div class="video-card">
-        <iframe src="https://www.youtube.com/embed/3JZ_D3ELwOQ" title="Vidéo 2" allowfullscreen></iframe>
-        <div class="video-title">Titre Vidéo 2</div>
-      </div>
-      <div class="video-card">
-        <iframe src="https://www.youtube.com/embed/oHg5SJYRHA0" title="Vidéo 3" allowfullscreen></iframe>
-        <div class="video-title">Titre Vidéo 3</div>
-      </div>
-    </div>
-  </section>
+  <div class="sort-container">
+    <label for="sort">Trier par : </label>
+    <select id="sort">
+      <option value="title">Titre</option>
+      <option value="likes">Likes</option>
+      <option value="fav">Favoris</option>
+    </select>
+  </div>
 
+  <div class="video-grid" id="videoGrid"></div>
+
+  <!-- Bouton Upload -->
+  <button class="upload-btn" id="uploadBtn">+</button>
+  <input type="file" id="fileInput" accept="video/*" style="display:none" />
+
+<script>
+  const videoGrid = document.getElementById('videoGrid');
+  const fileInput = document.getElementById('fileInput');
+  const uploadBtn = document.getElementById('uploadBtn');
+  const sortSelect = document.getElementById('sort');
+
+  let videos = JSON.parse(localStorage.getItem('videos') || '[]');
+
+  function saveVideos() {
+    localStorage.setItem('videos', JSON.stringify(videos));
+  }
+
+  function renderVideos() {
+    videoGrid.innerHTML = '';
+    let sorted = [...videos];
+    if (sortSelect.value === 'title') {
+      sorted.sort((a,b) => a.title.localeCompare(b.title));
+    } else if (sortSelect.value === 'likes') {
+      sorted.sort((a,b) => b.likes - a.likes);
+    } else if (sortSelect.value === 'fav') {
+      sorted.sort((a,b) => (b.fav?1:0) - (a.fav?1:0));
+    }
+    sorted.forEach((vid, index) => {
+      const card = document.createElement('div');
+      card.className = 'video-card';
+      const videoEl = document.createElement('video');
+      videoEl.src = vid.url;
+      videoEl.controls = true;
+      const info = document.createElement('div');
+      info.className = 'video-info';
+      const title = document.createElement('div');
+      title.className = 'video-title';
+      title.textContent = vid.title;
+      const desc = document.createElement('div');
+      desc.className = 'video-desc';
+      desc.textContent = vid.desc;
+      const actions = document.createElement('div');
+      actions.className = 'video-actions';
+      const likeBtn = document.createElement('button');
+      likeBtn.className = 'btn' + (vid.liked ? ' liked' : '');
+      likeBtn.textContent = `👍 ${vid.likes}`;
+      likeBtn.onclick = () => {
+        vid.liked = !vid.liked;
+        vid.likes += vid.liked ? 1 : -1;
+        saveVideos();
+        renderVideos();
+      };
+      const favBtn = document.createElement('button');
+      favBtn.className = 'btn' + (vid.fav ? ' fav' : '');
+      favBtn.textContent = '★';
+      favBtn.onclick = () => {
+        vid.fav = !vid.fav;
+        saveVideos();
+        renderVideos();
+      };
+      actions.appendChild(likeBtn);
+      actions.appendChild(favBtn);
+      info.appendChild(title);
+      info.appendChild(desc);
+      info.appendChild(actions);
+      card.appendChild(videoEl);
+      card.appendChild(info);
+      videoGrid.appendChild(card);
+    });
+  }
+
+  uploadBtn.addEventListener('click', () => fileInput.click());
+
+  fileInput.addEventListener('change', e => {
+    const file = e.target.files[0];
+    if (file) {
+      const url = URL.createObjectURL(file);
+      const title = prompt('Titre de la vidéo :') || 'Sans titre';
+      const desc = prompt('Description :') || '';
+      videos.push({ title, desc, url, likes: 0, liked: false, fav: false });
+      saveVideos();
+      renderVideos();
+    }
+  });
+
+  sortSelect.addEventListener('change', renderVideos);
+
+  renderVideos();
+</script>
 </body>
 </html>
