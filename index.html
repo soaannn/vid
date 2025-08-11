@@ -15,8 +15,6 @@
     align-items: center;
     padding: 1rem;
   }
-
-  /* Titre Soan + étoiles */
   .soan-container {
     position: relative;
     font-size: 3rem;
@@ -52,8 +50,6 @@
     0%, 100% { opacity: 1; }
     50% { opacity: 0.3; }
   }
-
-  /* Bouton + */
   .upload-btn {
     background: #ff0000;
     color: white;
@@ -75,8 +71,6 @@
   .upload-btn:hover {
     background: #cc0000;
   }
-
-  /* Tri */
   .sort-container {
     margin-bottom: 1rem;
   }
@@ -87,8 +81,6 @@
     border-radius: 5px;
     border: 1px solid #444;
   }
-
-  /* Galerie vidéos */
   .video-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit,minmax(280px,1fr));
@@ -123,7 +115,6 @@
   .video-actions {
     display: flex;
     gap: 0.5rem;
-    margin-bottom: 0.6rem;
   }
   .btn {
     flex: 1;
@@ -138,35 +129,11 @@
     background: #555;
   }
   .liked {
-    background: #e63946;
+    background: #ffdd00;
+    color: black;
   }
   .fav {
     background: #ff0000;
-  }
-
-  /* Commentaires */
-  .comments {
-    margin-top: 0.6rem;
-  }
-  .comment-input {
-    width: 100%;
-    padding: 0.4rem;
-    margin-bottom: 0.4rem;
-    border-radius: 5px;
-    border: 1px solid #444;
-    background: #222;
-    color: white;
-  }
-  .comment-list {
-    list-style: none;
-    padding: 0;
-    margin: 0;
-    font-size: 0.85rem;
-    color: #ccc;
-  }
-  .comment-list li {
-    border-bottom: 1px solid #333;
-    padding: 0.3rem 0;
   }
 </style>
 </head>
@@ -194,119 +161,154 @@
 
   <div class="video-grid" id="videoGrid"></div>
 
-  <!-- Bouton Upload -->
   <button class="upload-btn" id="uploadBtn">+</button>
   <input type="file" id="fileInput" accept="video/*" style="display:none" />
 
-<script>
-  const videoGrid = document.getElementById('videoGrid');
-  const fileInput = document.getElementById('fileInput');
-  const uploadBtn = document.getElementById('uploadBtn');
-  const sortSelect = document.getElementById('sort');
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/supabase.min.js"></script>
+  <script>
+    const SUPABASE_URL = 'https://yxlzzduvuqcrrwqwmngz.supabase.co';
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl4bHp6ZHV2dXFjcnJ3cXdtbmd6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTQ5MDU4MTgsImV4cCI6MjA3MDQ4MTgxOH0.53JEyXxF9paOCRHSOvdzGz9Gr0cubEB7mPuhvlDqwk8';
 
-  let videos = JSON.parse(localStorage.getItem('videos') || '[]');
+    const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
-  function saveVideos() {
-    localStorage.setItem('videos', JSON.stringify(videos));
-  }
+    const videoGrid = document.getElementById('videoGrid');
+    const fileInput = document.getElementById('fileInput');
+    const uploadBtn = document.getElementById('uploadBtn');
+    const sortSelect = document.getElementById('sort');
 
-  function renderVideos() {
-    videoGrid.innerHTML = '';
-    let sorted = [...videos];
-    if (sortSelect.value === 'title') {
-      sorted.sort((a,b) => a.title.localeCompare(b.title));
-    } else if (sortSelect.value === 'likes') {
-      sorted.sort((a,b) => b.likes - a.likes);
-    } else if (sortSelect.value === 'fav') {
-      sorted.sort((a,b) => (b.fav?1:0) - (a.fav?1:0));
+    let videos = [];
+
+    async function fetchVideos() {
+      const { data, error } = await supabase.storage.from('videos').list('', { limit: 100 });
+      if (error) {
+        alert('Erreur récupération vidéos : ' + error.message);
+        return;
+      }
+      videos = data.map(file => ({
+        title: file.name,
+        desc: '',
+        url: supabase.storage.from('videos').getPublicUrl(file.name).data.publicUrl,
+        likes: 0,
+        liked: false,
+        fav: false
+      }));
     }
-    sorted.forEach((vid, index) => {
-      const card = document.createElement('div');
-      card.className = 'video-card';
-      const videoEl = document.createElement('video');
-      videoEl.src = vid.url;
-      videoEl.controls = true;
-      const info = document.createElement('div');
-      info.className = 'video-info';
-      const title = document.createElement('div');
-      title.className = 'video-title';
-      title.textContent = vid.title;
-      const desc = document.createElement('div');
-      desc.className = 'video-desc';
-      desc.textContent = vid.desc;
-      const actions = document.createElement('div');
-      actions.className = 'video-actions';
-      const likeBtn = document.createElement('button');
-      likeBtn.className = 'btn' + (vid.liked ? ' liked' : '');
-      likeBtn.textContent = `♥ ${vid.likes}`;
-      likeBtn.onclick = () => {
-        vid.liked = !vid.liked;
-        vid.likes += vid.liked ? 1 : -1;
-        saveVideos();
-        renderVideos();
-      };
-      const favBtn = document.createElement('button');
-      favBtn.className = 'btn' + (vid.fav ? ' fav' : '');
-      favBtn.textContent = '★';
-      favBtn.onclick = () => {
-        vid.fav = !vid.fav;
-        saveVideos();
-        renderVideos();
-      };
-      actions.appendChild(likeBtn);
-      actions.appendChild(favBtn);
 
-      // Commentaires
-      const commentsDiv = document.createElement('div');
-      commentsDiv.className = 'comments';
-      const commentInput = document.createElement('input');
-      commentInput.className = 'comment-input';
-      commentInput.placeholder = 'Ajouter un commentaire...';
-      commentInput.onkeypress = (e) => {
-        if (e.key === 'Enter' && commentInput.value.trim() !== '') {
-          vid.comments.push(commentInput.value.trim());
-          commentInput.value = '';
+    function saveVideos() {
+      localStorage.setItem('videosMeta', JSON.stringify(videos));
+    }
+
+    function loadVideosMeta() {
+      const meta = localStorage.getItem('videosMeta');
+      if (meta) {
+        videos = JSON.parse(meta);
+      }
+    }
+
+    function renderVideos() {
+      videoGrid.innerHTML = '';
+      let sorted = [...videos];
+      if (sortSelect.value === 'title') {
+        sorted.sort((a,b) => a.title.localeCompare(b.title));
+      } else if (sortSelect.value === 'likes') {
+        sorted.sort((a,b) => b.likes - a.likes);
+      } else if (sortSelect.value === 'fav') {
+        sorted.sort((a,b) => (b.fav ? 1 : 0) - (a.fav ? 1 : 0));
+      }
+      sorted.forEach(vid => {
+        const card = document.createElement('div');
+        card.className = 'video-card';
+        const videoEl = document.createElement('video');
+        videoEl.src = vid.url;
+        videoEl.controls = true;
+        const info = document.createElement('div');
+        info.className = 'video-info';
+        const title = document.createElement('div');
+        title.className = 'video-title';
+        title.textContent = vid.title;
+        const desc = document.createElement('div');
+        desc.className = 'video-desc';
+        desc.textContent = vid.desc;
+        const actions = document.createElement('div');
+        actions.className = 'video-actions';
+        const likeBtn = document.createElement('button');
+        likeBtn.className = 'btn' + (vid.liked ? ' liked' : '');
+        likeBtn.textContent = `👍 ${vid.likes}`;
+        likeBtn.onclick = () => {
+          vid.liked = !vid.liked;
+          vid.likes += vid.liked ? 1 : -1;
           saveVideos();
           renderVideos();
-        }
-      };
-      const commentList = document.createElement('ul');
-      commentList.className = 'comment-list';
-      vid.comments.forEach(c => {
-        const li = document.createElement('li');
-        li.textContent = c;
-        commentList.appendChild(li);
+        };
+        const favBtn = document.createElement('button');
+        favBtn.className = 'btn' + (vid.fav ? ' fav' : '');
+        favBtn.textContent = '★';
+        favBtn.onclick = () => {
+          vid.fav = !vid.fav;
+          saveVideos();
+          renderVideos();
+        };
+        actions.appendChild(likeBtn);
+        actions.appendChild(favBtn);
+        info.appendChild(title);
+        info.appendChild(desc);
+        info.appendChild(actions);
+        card.appendChild(videoEl);
+        card.appendChild(info);
+        videoGrid.appendChild(card);
       });
-      commentsDiv.appendChild(commentInput);
-      commentsDiv.appendChild(commentList);
+    }
 
-      info.appendChild(title);
-      info.appendChild(desc);
-      info.appendChild(actions);
-      info.appendChild(commentsDiv);
-      card.appendChild(videoEl);
-      card.appendChild(info);
-      videoGrid.appendChild(card);
-    });
-  }
+    uploadBtn.addEventListener('click', () => fileInput.click());
 
-  uploadBtn.addEventListener('click', () => fileInput.click());
+    fileInput.addEventListener('change', async e => {
+      const file = e.target.files[0];
+      if (!file) return;
 
-  fileInput.addEventListener('change', e => {
-    const file = e.target.files[0];
-    if (file) {
-      const url = URL.createObjectURL(file);
-      const title = prompt('Titre de la vidéo :') || 'Sans titre';
+      const title = prompt('Titre de la vidéo :') || file.name;
       const desc = prompt('Description :') || '';
-      videos.push({ title, desc, url, likes: 0, liked: false, fav: false, comments: [] });
+
+      const filePath = `${Date.now()}_${file.name}`;
+
+      const { data, error } = await supabase.storage.from('videos').upload(filePath, file, {
+        cacheControl: '3600',
+        upsert: false
+      });
+
+      if (error) {
+        alert('Erreur upload : ' + error.message);
+        return;
+      }
+
+      const { publicUrl } = supabase.storage.from('videos').getPublicUrl(filePath).data;
+
+      videos.push({
+        title,
+        desc,
+        url: publicUrl,
+        likes: 0,
+        liked: false,
+        fav: false
+      });
       saveVideos();
       renderVideos();
-    }
-  });
+    });
 
-  sortSelect.addEventListener('change', renderVideos);
+    sortSelect.addEventListener('change', renderVideos);
 
-  renderVideos();
-</script>
+    (async () => {
+      loadVideosMeta();
+      await fetchVideos();
+      // Fusion des métadonnées locales (likes, fav, desc) dans les vidéos récupérées
+      const localMeta = JSON.parse(localStorage.getItem('videosMeta') || '[]');
+      videos = videos.map(v => {
+        const meta = localMeta.find(m => m.url === v.url);
+        return meta ? { ...v, likes: meta.likes, liked: meta.liked, fav: meta.fav, desc: meta.desc || v.desc } : v;
+      });
+      saveVideos();
+      renderVideos();
+    })();
+  </script>
+
 </body>
 </html>
