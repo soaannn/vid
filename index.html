@@ -6,7 +6,7 @@
 <title>SOVID - Plateforme Vidéo</title>
 <style>
   :root {
-    --orange: #ffcc00; /* Jaune SOVID */
+    --orange: #ffcc00;
     --dark-gray: #141414;
     --light-gray: #222222;
     --white: #ffffff;
@@ -55,18 +55,20 @@
     overflow: hidden;
     box-shadow: 0 4px 8px rgba(0,0,0,0.7);
     margin-bottom: 20px;
-    cursor: pointer;
+    cursor: default;
     transition: transform 0.3s ease;
   }
   .video-card:hover {
-    transform: scale(1.03);
+    transform: scale(1.02);
   }
-  .video-thumb {
+  .video-player {
     width: 100%;
+    height: auto;
+    background-color: black;
+    border-radius: 8px 8px 0 0;
+    max-height: 360px;
+    object-fit: contain;
     display: block;
-    object-fit: cover;
-    height: 200px;
-    background-color: #333;
   }
   .video-info {
     padding: 10px 15px;
@@ -81,10 +83,6 @@
     font-size: 14px;
     color: #ccc;
     margin-bottom: 6px;
-  }
-  .video-details {
-    font-size: 14px;
-    color: #bbb;
   }
   #auth-screen {
     position: fixed;
@@ -134,7 +132,7 @@
     cursor: pointer;
     box-shadow: 0 4px 10px rgba(255,204,0,0.6);
     transition: background-color 0.3s ease;
-    display: none; /* visible uniquement si authentifié */
+    display: none;
   }
   #add-video-btn:hover {
     background-color: #e6b800;
@@ -239,7 +237,6 @@
 </div>
 
 <script type="module">
-// Import Supabase client depuis CDN
 import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm'
 
 const SUPABASE_URL = 'https://yxlzzduvuqcrrwqwmngz.supabase.co'
@@ -261,7 +258,6 @@ const videosContainer = document.getElementById('videos-container')
 const ACCESS_CODE = '070112'
 let authenticated = false
 
-// Vérifier code
 authBtn.addEventListener('click', () => {
   const val = codeInput.value.trim()
   if(val === ACCESS_CODE){
@@ -274,14 +270,12 @@ authBtn.addEventListener('click', () => {
   }
 })
 
-// Permet aussi "Enter" dans input pour valider
 codeInput.addEventListener('keyup', e => {
   if(e.key === 'Enter'){
     authBtn.click()
   }
 })
 
-// Charger vidéos depuis Supabase
 async function loadVideos(){
   videosContainer.innerHTML = 'Chargement...'
   const { data, error } = await supabase
@@ -304,19 +298,20 @@ async function loadVideos(){
     const card = document.createElement('div')
     card.className = 'video-card'
 
-    // Pour simplifier, on affiche une image placeholder + titre + description + URL cliquable
     card.innerHTML = `
+      <video class="video-player" controls preload="metadata">
+        <source src="${escapeHtml(video.url)}" type="video/mp4" />
+        Votre navigateur ne supporte pas la lecture vidéo.
+      </video>
       <div class="video-info">
         <h2 class="video-title">${escapeHtml(video.title)}</h2>
         <p class="video-description">${escapeHtml(video.description || '')}</p>
-        <p class="video-details"><a href="${escapeHtml(video.url)}" target="_blank" style="color:#ffcc00;">Voir la vidéo</a></p>
       </div>
     `
     videosContainer.appendChild(card)
   })
 }
 
-// Afficher/masquer formulaire ajout vidéo
 addVideoBtn.addEventListener('click', () => {
   addVideoForm.style.display = 'block'
   formError.style.display = 'none'
@@ -326,13 +321,11 @@ addVideoBtn.addEventListener('click', () => {
   document.getElementById('video-description').value = ''
 })
 
-// Annuler ajout
 cancelBtn.addEventListener('click', () => {
   addVideoForm.style.display = 'none'
   formError.style.display = 'none'
 })
 
-// Ajouter vidéo sur Supabase
 saveVideoBtn.addEventListener('click', async () => {
   formError.style.display = 'none'
   const url = document.getElementById('video-url').value.trim()
@@ -345,7 +338,6 @@ saveVideoBtn.addEventListener('click', async () => {
     return
   }
 
-  // Vérifier que URL est valide (simple regex)
   try {
     new URL(url)
   } catch {
@@ -354,7 +346,6 @@ saveVideoBtn.addEventListener('click', async () => {
     return
   }
 
-  // Ajouter dans Supabase
   const { data, error } = await supabase
     .from('videos')
     .insert([{ url, title, description }])
@@ -365,12 +356,10 @@ saveVideoBtn.addEventListener('click', async () => {
     return
   }
 
-  // Tout ok
   addVideoForm.style.display = 'none'
   loadVideos()
 })
 
-// Petite fonction sécurité pour injection HTML
 function escapeHtml(text) {
   const div = document.createElement('div')
   div.textContent = text
