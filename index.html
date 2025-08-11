@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Soan</title>
+<title>Soan - Upload vidéos</title>
 <style>
   body {
     margin: 0;
@@ -91,12 +91,14 @@
     font-weight: bold;
     margin-bottom: 0.4rem;
     font-size: 1.1rem;
+    word-break: break-word;
   }
   .video-desc {
     font-size: 0.9rem;
     color: #ccc;
     margin-bottom: 0.6rem;
     min-height: 40px;
+    word-break: break-word;
   }
   .video-actions {
     display: flex;
@@ -209,7 +211,7 @@
 
   <div class="video-grid" id="videoGrid"></div>
 
-  <label id="uploadLabel" for="fileInput">+</label>
+  <label id="uploadLabel" for="fileInput" title="Uploader une vidéo">+</label>
   <input type="file" id="fileInput" accept="video/*" />
 
   <div id="loaderOverlay">Upload en cours...</div>
@@ -234,15 +236,19 @@
         alert('Erreur récupération vidéos : ' + error.message);
         return;
       }
-      // Création d’objets vidéo avec URL publiques
-      videos = data.map(file => ({
-        title: file.name,
-        desc: '',
-        url: supabase.storage.from('videos').getPublicUrl(file.name).data.publicUrl,
-        likes: 0,
-        liked: false,
-        fav: false
-      }));
+      // On crée des objets vidéo basiques
+      const publicVideos = data.map(file => {
+        const { publicUrl } = supabase.storage.from('videos').getPublicUrl(file.name).data;
+        return {
+          title: file.name,
+          desc: '',
+          url: publicUrl,
+          likes: 0,
+          liked: false,
+          fav: false
+        };
+      });
+      return publicVideos;
     }
 
     function saveVideos() {
@@ -252,8 +258,9 @@
     function loadVideosMeta() {
       const meta = localStorage.getItem('videosMeta');
       if (meta) {
-        videos = JSON.parse(meta);
+        return JSON.parse(meta);
       }
+      return [];
     }
 
     function renderVideos() {
@@ -316,6 +323,17 @@
       });
     }
 
+    fileInput.addEventListener('click', e => {
+      // Demander le code avant même d’ouvrir le selecteur de fichiers
+      const code = prompt("Entrez le code d'accès pour uploader :", "");
+      if (code !== '2012') {
+        alert('Code incorrect, upload annulé.');
+        e.preventDefault();
+        fileInput.blur();
+        return false;
+      }
+    });
+
     fileInput.addEventListener('change', async e => {
       const file = e.target.files[0];
       if (!file) return;
@@ -358,15 +376,21 @@
     sortSelect.addEventListener('change', renderVideos);
 
     (async () => {
-      loadVideosMeta();
-      await fetchVideos();
-      // Fusion métadonnées locales
-      const localMeta = JSON.parse(localStorage.getItem('videosMeta') || '[]');
-      videos = videos.map(v => {
-        const meta = localMeta.find(m => m.url === v.url);
-        return meta ? { ...v, likes: meta.likes, liked: meta.liked, fav: meta.fav, desc: meta.desc || v.desc } : v;
+      // Charger métadonnées locales
+      const localMeta = loadVideosMeta();
+
+      // Récupérer vidéos en ligne
+      const onlineVideos = await fetchVideos();
+
+      // Fusionner données : prioriser métadonnées locales sur les vidéos existantes en ligne
+      videos = onlineVideos.map(v => {
+        const local = localMeta.find(m => m.url === v.url);
+        return local ? { ...v, likes: local.likes, liked: local.liked, fav: local.fav, desc: local.desc || v.desc } : v;
       });
+
+      // Sauvegarder pour garder la synchro
       saveVideos();
+
       renderVideos();
     })();
   </script>
