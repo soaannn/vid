@@ -3,9 +3,8 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Soan - Upload vidéos avec erreurs</title>
+<title>Soan - Ajouter vidéo par lien</title>
 <style>
-  /* Styles inchangés sauf ajout d'overlay d'erreur */
   body {
     margin: 0;
     background: #121212;
@@ -70,7 +69,7 @@
     gap: 1rem;
     width: 100%;
     max-width: 1000px;
-    margin-bottom: 6rem;
+    margin-bottom: 4rem;
   }
   .video-card {
     background: #1e1e1e;
@@ -79,9 +78,9 @@
     display: flex;
     flex-direction: column;
   }
-  video {
+  video, iframe {
     width: 100%;
-    height: auto;
+    height: 180px;
     background: black;
     border-bottom: 1px solid #333;
   }
@@ -127,62 +126,27 @@
   .fav {
     background: #ff0000;
   }
-  #uploadLabel {
+  #addVideoBtn {
     position: fixed;
     bottom: 20px;
     right: 20px;
-    background: #ff0000;
+    background: #ffdd00;
     width: 70px;
     height: 70px;
     border-radius: 50%;
-    box-shadow: 0 4px 12px rgba(255,0,0,0.7);
+    box-shadow: 0 4px 12px rgba(255,221,0,0.7);
     display: flex;
     align-items: center;
     justify-content: center;
     font-size: 3rem;
-    color: white;
+    color: black;
     cursor: pointer;
     user-select: none;
     transition: background-color 0.3s ease, box-shadow 0.3s ease;
   }
-  #uploadLabel:hover {
-    background: #cc0000;
-    box-shadow: 0 6px 20px rgba(204,0,0,0.9);
-  }
-  #uploadLabel::after {
-    content: "Uploader une vidéo";
-    position: absolute;
-    bottom: 90px;
-    right: 0;
-    background: #222;
-    color: #ff0000;
-    padding: 6px 12px;
-    border-radius: 6px;
-    font-size: 1rem;
-    opacity: 0;
-    pointer-events: none;
-    transition: opacity 0.3s ease;
-    white-space: nowrap;
-  }
-  #uploadLabel:hover::after {
-    opacity: 1;
-  }
-  #fileInput {
-    display: none;
-  }
-  #loaderOverlay {
-    position: fixed;
-    top:0; left:0; right:0; bottom:0;
-    background: rgba(0,0,0,0.8);
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    color: #ff0000;
-    font-size: 2rem;
-    font-weight: 900;
-    user-select: none;
-    z-index: 9999;
-    display: none;
+  #addVideoBtn:hover {
+    background: #e6c800;
+    box-shadow: 0 6px 20px rgba(230,200,0,0.9);
   }
   #errorOverlay {
     position: fixed;
@@ -232,216 +196,182 @@
 
   <div class="video-grid" id="videoGrid"></div>
 
-  <label id="uploadLabel" for="fileInput" title="Uploader une vidéo">+</label>
-  <input type="file" id="fileInput" accept="video/*" />
+  <button id="addVideoBtn" title="Ajouter une vidéo">+</button>
 
-  <div id="loaderOverlay">Upload en cours...</div>
   <div id="errorOverlay"></div>
 
-  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/supabase.min.js"></script>
-  <script>
-    const SUPABASE_URL = 'https://yxlzzduvuqcrrwqwmngz.supabase.co';
-    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl4bHp6ZHV2dXFjcnJ3cXdtbmd6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTQ5MDU4MTgsImV4cCI6MjA3MDQ4MTgxOH0.53JEyXxF9paOCRHSOvdzGz9Gr0cubEB7mPuhvlDqwk8';
+<script>
+  const videoGrid = document.getElementById('videoGrid');
+  const sortSelect = document.getElementById('sort');
+  const addVideoBtn = document.getElementById('addVideoBtn');
+  const errorOverlay = document.getElementById('errorOverlay');
 
-    const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+  let videos = [];
 
-    const videoGrid = document.getElementById('videoGrid');
-    const fileInput = document.getElementById('fileInput');
-    const loader = document.getElementById('loaderOverlay');
-    const sortSelect = document.getElementById('sort');
-    const errorOverlay = document.getElementById('errorOverlay');
+  function showError(message) {
+    errorOverlay.textContent = message;
+    errorOverlay.classList.add('show');
+    setTimeout(() => {
+      errorOverlay.classList.remove('show');
+    }, 5000);
+  }
 
-    let videos = [];
-
-    function showError(message) {
-      errorOverlay.textContent = message;
-      errorOverlay.classList.add('show');
-      setTimeout(() => {
-        errorOverlay.classList.remove('show');
-      }, 5000);
+  function saveVideos() {
+    try {
+      localStorage.setItem('videosMeta', JSON.stringify(videos));
+    } catch (err) {
+      showError("Erreur stockage local : " + err.message);
     }
+  }
 
-    async function fetchVideos() {
-      try {
-        const { data, error } = await supabase.storage.from('videos').list('', { limit: 100 });
-        if (error) {
-          showError(`Erreur fetch vidéos: ${error.message}`);
-          return [];
-        }
-        const publicVideos = data.map(file => {
-          const { data: urlData } = supabase.storage.from('videos').getPublicUrl(file.name);
-          return {
-            title: file.name,
-            desc: '',
-            url: urlData.publicUrl,
-            likes: 0,
-            liked: false,
-            fav: false
-          };
-        });
-        return publicVideos;
-      } catch (err) {
-        showError(`Erreur réseau fetch vidéos : ${err.message}`);
-        return [];
-      }
+  function loadVideos() {
+    try {
+      const stored = localStorage.getItem('videosMeta');
+      return stored ? JSON.parse(stored) : [];
+    } catch (err) {
+      showError("Erreur lecture stockage local : " + err.message);
+      return [];
     }
+  }
 
-    function saveVideos() {
-      try {
-        localStorage.setItem('videosMeta', JSON.stringify(videos));
-      } catch (err) {
-        showError("Erreur stockage local : " + err.message);
+  // Transforme un lien YouTube en iframe embarqué
+  function getYouTubeEmbedUrl(url) {
+    try {
+      const urlObj = new URL(url);
+      if (urlObj.hostname.includes('youtube.com')) {
+        const v = urlObj.searchParams.get('v');
+        if(v) return `https://www.youtube.com/embed/${v}`;
+      } else if (urlObj.hostname === 'youtu.be') {
+        const id = urlObj.pathname.slice(1);
+        if(id) return `https://www.youtube.com/embed/${id}`;
       }
+    } catch {
+      return null;
     }
+    return null;
+  }
 
-    function loadVideosMeta() {
-      try {
-        const meta = localStorage.getItem('videosMeta');
-        return meta ? JSON.parse(meta) : [];
-      } catch (err) {
-        showError("Erreur lecture stockage local : " + err.message);
-        return [];
-      }
+  // Génère le HTML vidéo ou iframe selon le lien
+  function createVideoElement(video) {
+    if (video.url.includes('youtube.com') || video.url.includes('youtu.be')) {
+      const iframe = document.createElement('iframe');
+      iframe.src = getYouTubeEmbedUrl(video.url);
+      iframe.allow = "accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture";
+      iframe.allowFullscreen = true;
+      return iframe;
+    } else {
+      const videoEl = document.createElement('video');
+      videoEl.src = video.url;
+      videoEl.controls = true;
+      videoEl.preload = "metadata";
+      return videoEl;
     }
+  }
 
-    function renderVideos() {
-      videoGrid.innerHTML = '';
-      let sorted = [...videos];
-      if (sortSelect.value === 'title') {
-        sorted.sort((a,b) => a.title.localeCompare(b.title));
-      } else if (sortSelect.value === 'likes') {
-        sorted.sort((a,b) => b.likes - a.likes);
-      } else if (sortSelect.value === 'fav') {
-        sorted.sort((a,b) => (b.fav ? 1 : 0) - (a.fav ? 1 : 0));
-      }
-      sorted.forEach(vid => {
-        const card = document.createElement('div');
-        card.className = 'video-card';
-        const videoEl = document.createElement('video');
-        videoEl.src = vid.url;
-        videoEl.controls = true;
-        videoEl.preload = "metadata";
-        videoEl.title = vid.title;
-        const info = document.createElement('div');
-        info.className = 'video-info';
-        const title = document.createElement('div');
-        title.className = 'video-title';
-        title.textContent = vid.title;
-        const desc = document.createElement('div');
-        desc.className = 'video-desc';
-        desc.textContent = vid.desc;
-        const actions = document.createElement('div');
-        actions.className = 'video-actions';
-
-        const likeBtn = document.createElement('button');
-        likeBtn.className = 'btn' + (vid.liked ? ' liked' : '');
-        likeBtn.textContent = `👍 ${vid.likes}`;
-        likeBtn.onclick = () => {
-          vid.liked = !vid.liked;
-          vid.likes += vid.liked ? 1 : -1;
-          saveVideos();
-          renderVideos();
-        };
-
-        const favBtn = document.createElement('button');
-        favBtn.className = 'btn' + (vid.fav ? ' fav' : '');
-        favBtn.textContent = '★';
-        favBtn.onclick = () => {
-          vid.fav = !vid.fav;
-          saveVideos();
-          renderVideos();
-        };
-
-        actions.appendChild(likeBtn);
-        actions.appendChild(favBtn);
-        info.appendChild(title);
-        info.appendChild(desc);
-        info.appendChild(actions);
-
-        card.appendChild(videoEl);
-        card.appendChild(info);
-        videoGrid.appendChild(card);
-      });
+  function renderVideos() {
+    videoGrid.innerHTML = '';
+    let sorted = [...videos];
+    if (sortSelect.value === 'title') {
+      sorted.sort((a,b) => a.title.localeCompare(b.title));
+    } else if (sortSelect.value === 'likes') {
+      sorted.sort((a,b) => b.likes - a.likes);
+    } else if (sortSelect.value === 'fav') {
+      sorted.sort((a,b) => (b.fav ? 1 : 0) - (a.fav ? 1 : 0));
     }
+    sorted.forEach(vid => {
+      const card = document.createElement('div');
+      card.className = 'video-card';
 
-    fileInput.addEventListener('click', e => {
-      const code = prompt("Entrez le code d'accès pour uploader :", "");
-      if (code !== '2012') {
-        showError('Code incorrect, upload annulé.');
-        e.preventDefault();
-        fileInput.blur();
-        return false;
-      }
-    });
+      const media = createVideoElement(vid);
+      card.appendChild(media);
 
-    fileInput.addEventListener('change', async e => {
-      const file = e.target.files[0];
-      if (!file) return;
+      const info = document.createElement('div');
+      info.className = 'video-info';
 
-      const title = prompt('Titre de la vidéo :', file.name) || file.name;
-      const desc = prompt('Description :', '') || '';
+      const title = document.createElement('div');
+      title.className = 'video-title';
+      title.textContent = vid.title;
 
-      const filePath = `${Date.now()}_${file.name}`;
+      const desc = document.createElement('div');
+      desc.className = 'video-desc';
+      desc.textContent = vid.desc;
 
-      loader.style.display = 'flex';
+      const actions = document.createElement('div');
+      actions.className = 'video-actions';
 
-      try {
-        const { data, error } = await supabase.storage.from('videos').upload(filePath, file, {
-          cacheControl: '3600',
-          upsert: false
-        });
-
-        loader.style.display = 'none';
-
-        if (error) {
-          showError(`Erreur upload : ${error.message}`);
-          return;
-        }
-
-        const { data: urlData } = supabase.storage.from('videos').getPublicUrl(filePath);
-
-        if(!urlData.publicUrl) {
-          showError('Erreur: URL publique introuvable après upload.');
-          return;
-        }
-
-        videos.push({
-          title,
-          desc,
-          url: urlData.publicUrl,
-          likes: 0,
-          liked: false,
-          fav: false
-        });
+      const likeBtn = document.createElement('button');
+      likeBtn.className = 'btn' + (vid.liked ? ' liked' : '');
+      likeBtn.textContent = `👍 ${vid.likes}`;
+      likeBtn.onclick = () => {
+        vid.liked = !vid.liked;
+        vid.likes += vid.liked ? 1 : -1;
         saveVideos();
         renderVideos();
-      } catch (err) {
-        loader.style.display = 'none';
-        showError('Erreur réseau lors de l’upload : ' + err.message);
-      }
+      };
 
-      fileInput.value = '';
-    });
-
-    sortSelect.addEventListener('change', renderVideos);
-
-    (async () => {
-      try {
-        const localMeta = loadVideosMeta();
-        const onlineVideos = await fetchVideos();
-
-        videos = onlineVideos.map(v => {
-          const local = localMeta.find(m => m.url === v.url);
-          return local ? { ...v, likes: local.likes, liked: local.liked, fav: local.fav, desc: local.desc || v.desc } : v;
-        });
-
+      const favBtn = document.createElement('button');
+      favBtn.className = 'btn' + (vid.fav ? ' fav' : '');
+      favBtn.textContent = '★';
+      favBtn.onclick = () => {
+        vid.fav = !vid.fav;
         saveVideos();
         renderVideos();
-      } catch (err) {
-        showError('Erreur initialisation : ' + err.message);
-      }
-    })();
-  </script>
+      };
+
+      actions.appendChild(likeBtn);
+      actions.appendChild(favBtn);
+
+      info.appendChild(title);
+      info.appendChild(desc);
+      info.appendChild(actions);
+
+      card.appendChild(info);
+
+      videoGrid.appendChild(card);
+    });
+  }
+
+  addVideoBtn.addEventListener('click', () => {
+    const code = prompt('Entrez le code d’accès pour ajouter une vidéo :');
+    if (code !== '2012') {
+      showError('Code incorrect, ajout annulé.');
+      return;
+    }
+    const url = prompt('Collez le lien de la vidéo (YouTube, Vimeo, ou lien direct mp4) :');
+    if (!url || !url.trim()) {
+      showError('Lien de vidéo vide ou invalide.');
+      return;
+    }
+    const title = prompt('Titre de la vidéo :') || 'Sans titre';
+    const desc = prompt('Description :') || '';
+
+    // Pour validation basique, on accepte si ça ressemble à une URL
+    try {
+      new URL(url);
+    } catch {
+      showError('Lien vidéo non valide.');
+      return;
+    }
+
+    videos.push({
+      url: url.trim(),
+      title: title.trim(),
+      desc: desc.trim(),
+      likes: 0,
+      liked: false,
+      fav: false
+    });
+    saveVideos();
+    renderVideos();
+  });
+
+  sortSelect.addEventListener('change', renderVideos);
+
+  // Chargement initial
+  videos = loadVideos();
+  renderVideos();
+
+</script>
 
 </body>
 </html>
