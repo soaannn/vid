@@ -1,516 +1,159 @@
 <!DOCTYPE html>
 <html lang="fr">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>SOAN - Gestion Vidéos avec Supabase</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>SoVid - Plateforme Vidéo</title>
+  <style>
+    /* Couleurs inspirées de Pornhub */
+    :root {
+      --orange: #ff6600;
+      --dark-gray: #141414;
+      --light-gray: #222222;
+      --white: #ffffff;
+    }
 
-<style>
-  /* (Garde le même style que précédemment, pour la clarté je mets uniquement l’essentiel) */
-  body {
-    background: #111;
-    color: #eee;
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    margin: 0; padding: 0;
-  }
-  /* ... styles splash, container, video grid, modals, boutons, etc. (utilise ceux fournis précédemment) */
-  /* Je te recommande de reprendre exactement les styles précédents pour le rendu */
-</style>
+    body {
+      margin: 0;
+      background-color: var(--dark-gray);
+      color: var(--white);
+      font-family: Arial, sans-serif;
+    }
 
-<!-- Supabase client -->
-<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/supabase.min.js"></script>
+    header {
+      display: flex;
+      align-items: center;
+      background-color: var(--dark-gray);
+      padding: 10px 20px;
+      border-bottom: 3px solid var(--orange);
+    }
 
+    .logo {
+      font-weight: bold;
+      font-size: 28px;
+      color: var(--white);
+      user-select: none;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .logo .orange-box {
+      background-color: var(--orange);
+      padding: 5px 12px;
+      font-weight: 900;
+      border-radius: 3px;
+      color: var(--dark-gray);
+    }
+
+    nav {
+      margin-left: auto;
+    }
+
+    nav a {
+      color: var(--white);
+      text-decoration: none;
+      margin-left: 20px;
+      font-weight: bold;
+      transition: color 0.3s ease;
+    }
+
+    nav a:hover {
+      color: var(--orange);
+    }
+
+    main {
+      padding: 20px;
+      max-width: 960px;
+      margin: 0 auto;
+    }
+
+    .video-card {
+      background-color: var(--light-gray);
+      border-radius: 8px;
+      overflow: hidden;
+      box-shadow: 0 4px 8px rgba(0,0,0,0.7);
+      margin-bottom: 20px;
+      cursor: pointer;
+      transition: transform 0.3s ease;
+    }
+
+    .video-card:hover {
+      transform: scale(1.03);
+    }
+
+    .video-thumb {
+      width: 100%;
+      display: block;
+      object-fit: cover;
+      height: 200px;
+      background-color: #333;
+    }
+
+    .video-info {
+      padding: 10px 15px;
+    }
+
+    .video-title {
+      font-size: 18px;
+      font-weight: bold;
+      margin: 0 0 6px 0;
+      color: var(--white);
+    }
+
+    .video-details {
+      font-size: 14px;
+      color: #bbb;
+    }
+
+    footer {
+      text-align: center;
+      padding: 15px;
+      background-color: var(--dark-gray);
+      border-top: 3px solid var(--orange);
+      margin-top: 40px;
+      font-size: 14px;
+      color: #888;
+      user-select: none;
+    }
+  </style>
 </head>
 <body>
-
-<!-- Splash Screen -->
-<div id="splash" role="dialog" aria-modal="true" aria-labelledby="splashTitle" style="display:flex; flex-direction:column; align-items:center; justify-content:center; height:100vh; background:#111;">
-  <div class="soan-logo" id="splashTitle" aria-label="Logo SOAN" style="font-size:3rem; font-weight:bold; margin-bottom:2rem; color:#ffdd00; user-select:none;">
-    S O A N
-    <div class="stars" aria-hidden="true" style="font-size:1.3rem;">✦ ✦ ✦ ✦ ✦ ✦ ✦ ✦ ✦</div>
-  </div>
-  <form id="passForm" aria-describedby="passHelp" style="display:flex; flex-direction:column; gap:0.5rem; width:220px;">
-    <input
-      type="password"
-      id="accessCode"
-      maxlength="6"
-      autocomplete="off"
-      placeholder="ENTRER LE CODE"
-      aria-required="true"
-      aria-describedby="passHelp"
-      spellcheck="false"
-      inputmode="numeric"
-      pattern="[0-9]*"
-      aria-label="Champ mot de passe pour accès"
-      required
-      style="padding:10px; font-size:1rem; border-radius:8px; border:2px solid #ffdd00; background:#222; color:#fff;"
-    />
-    <div id="passHelp" style="color:#aaa; font-size:0.85rem; text-align:center;">
-      Code à 6 chiffres, exemple : 123456
+  <header>
+    <div class="logo">
+      So<span class="orange-box">Vid</span>
     </div>
-    <button type="submit" aria-label="Valider le code d'accès" style="margin-top:8px; padding:8px; background:#ffdd00; border:none; border-radius:8px; font-weight:bold; cursor:pointer;">
-      OK
-    </button>
-    <div id="passError" role="alert" style="color:#ff4444; margin-top:12px; font-weight:700; text-align:center; display:none;">
-      Code incorrect, réessayez.
-    </div>
-  </form>
-</div>
+    <nav>
+      <a href="#">Accueil</a>
+      <a href="#">Vidéos</a>
+      <a href="#">À propos</a>
+      <a href="#">Contact</a>
+    </nav>
+  </header>
 
-<!-- Main app container -->
-<div id="app" aria-live="polite" aria-atomic="true" tabindex="-1" hidden style="padding:1rem; max-width:960px; margin:0 auto;">
+  <main>
+    <h1>Bienvenue sur SoVid</h1>
+    <p>Découvrez des vidéos sélectionnées pour vous.</p>
 
-  <div class="soan-container" aria-label="Titre principal SOAN" style="font-size:2rem; font-weight:bold; color:#ffdd00; text-align:center; margin-bottom:1rem; user-select:none;">
-    S O A N
-    <div class="stars" aria-hidden="true" style="font-size:1.3rem;">✦ ✦ ✦ ✦ ✦ ✦ ✦ ✦ ✦</div>
-  </div>
-
-  <div class="sort-container" role="region" aria-label="Tri des vidéos" style="margin-bottom:1rem; display:flex; align-items:center; gap:0.5rem;">
-    <label for="sortSelect">Trier par :</label>
-    <select id="sortSelect" aria-controls="videoGrid" style="padding:6px 12px; border-radius:8px; border:2px solid #ffdd00; background:#222; color:#fff;">
-      <option value="title">Titre</option>
-      <option value="code">Code</option>
-    </select>
-  </div>
-
-  <div class="search-container" role="search" style="margin-bottom:1rem; display:flex; align-items:center; gap:0.5rem;">
-    <label for="searchInput">Rechercher :</label>
-    <input
-      type="text"
-      id="searchInput"
-      placeholder="Rechercher un titre..."
-      aria-label="Rechercher une vidéo par titre"
-      autocomplete="off"
-      spellcheck="false"
-      style="padding:6px 12px; border-radius:8px; border:2px solid #ffdd00; background:#222; color:#fff; flex-grow:1; max-width:400px;"
-    />
-  </div>
-
-  <section id="videoGrid" class="video-grid" tabindex="0" aria-live="polite" aria-label="Liste des vidéos disponibles" style="display:grid; grid-template-columns: repeat(auto-fit,minmax(280px,1fr)); gap:1rem;"></section>
-
-  <button id="addVideoBtn" aria-label="Ajouter une nouvelle vidéo" style="position: fixed; bottom: 25px; right: 25px; font-size: 2.5rem; background: #ffdd00; border:none; border-radius: 50%; width: 56px; height: 56px; cursor: pointer; color: #111; font-weight:bold; box-shadow: 0 0 10px #ffdd00;">
-    ＋
-  </button>
-</div>
-
-<!-- Modals -->
-
-<!-- Add/Edit Video Modal -->
-<div class="modal-bg" id="addEditModal" role="dialog" aria-modal="true" aria-labelledby="addEditTitle" aria-describedby="addEditDesc" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.75); backdrop-filter:blur(3px); align-items:center; justify-content:center; z-index:1000;">
-  <div class="modal" style="background:#222; padding:1.5rem; border-radius:15px; width:90%; max-width:480px; position:relative; color:#eee; box-shadow:0 0 15px #ffdd00;">
-    <button class="modal-close-btn" aria-label="Fermer le formulaire d'ajout/édition" style="position:absolute; top:10px; right:15px; background:none; border:none; font-size:2rem; color:#ffdd00; cursor:pointer; user-select:none;">×</button>
-    <h2 id="addEditTitle" style="margin-top:0; margin-bottom:0.75rem;">Ajouter une vidéo</h2>
-    <div id="addEditDesc" style="color:#ccc; font-size:0.9rem; margin-bottom:12px;">Remplissez les informations de la vidéo.</div>
-    <form id="addEditForm" style="display:flex; flex-direction:column; gap:12px;">
-      <label for="videoTitle">Titre</label>
-      <input type="text" id="videoTitle" name="title" required autocomplete="off" maxlength="60" aria-required="true" style="padding:10px 14px; font-size:1rem; border-radius:10px; border:2px solid #ffdd00; background:#222; color:#fff;" />
-
-      <label for="videoCode">Code (unique)</label>
-      <input type="text" id="videoCode" name="code" required autocomplete="off" maxlength="10" aria-required="true" pattern="[a-zA-Z0-9-]+" title="Uniquement lettres, chiffres et tirets" style="padding:10px 14px; font-size:1rem; border-radius:10px; border:2px solid #ffdd00; background:#222; color:#fff;" />
-
-      <label for="videoPreviewUrl">URL de l'aperçu (image ou vidéo)</label>
-      <input type="url" id="videoPreviewUrl" name="previewUrl" autocomplete="off" maxlength="300" placeholder="https://exemple.com/preview.jpg" style="padding:10px 14px; font-size:1rem; border-radius:10px; border:2px solid #ffdd00; background:#222; color:#fff;" />
-
-      <label for="videoVideoUrl">URL de la vidéo</label>
-      <input type="url" id="videoVideoUrl" name="videoUrl" autocomplete="off" maxlength="300" placeholder="https://exemple.com/video.mp4" required aria-required="true" style="padding:10px 14px; font-size:1rem; border-radius:10px; border:2px solid #ffdd00; background:#222; color:#fff;" />
-
-      <label for="videoDescription">Description</label>
-      <textarea id="videoDescription" name="description" maxlength="300" rows="3" style="padding:10px 14px; font-size:1rem; border-radius:10px; border:2px solid #ffdd00; background:#222; color:#fff; resize:vertical;"></textarea>
-
-      <div class="modal-actions" style="text-align:right; margin-top:8px;">
-        <button type="submit" class="btn" style="background:#ffdd00; border:none; padding:8px 16px; border-radius:8px; font-weight:bold; cursor:pointer; margin-left:10px;">Enregistrer</button>
-        <button type="button" class="btn" id="cancelAddEdit" style="background:#555; border:none; padding:8px 16px; border-radius:8px; color:#ddd; cursor:pointer;">Annuler</button>
+    <div class="video-card">
+      <img src="https://via.placeholder.com/960x200?text=Miniature+Vidéo+1" alt="Vidéo 1" class="video-thumb" />
+      <div class="video-info">
+        <h2 class="video-title">Titre de la Vidéo 1</h2>
+        <p class="video-details">Durée: 4:35 · Vues: 12 345</p>
       </div>
-    </form>
-  </div>
-</div>
+    </div>
 
-<!-- Video Player Modal -->
-<div class="modal-bg" id="videoPlayerModal" role="dialog" aria-modal="true" aria-label="Lecteur vidéo" style="display:none; position:fixed; inset:0; background:rgba(0,0,0,0.9); align-items:center; justify-content:center; z-index:1100;">
-  <div class="modal" style="max-width: 800px; background:#222; padding:1rem; border-radius:15px; box-shadow:0 0 15px #ffdd00; position:relative;">
-    <button class="modal-close-btn" aria-label="Fermer le lecteur vidéo" style="position:absolute; top:10px; right:15px; background:none; border:none; font-size:2rem; color:#ffdd00; cursor:pointer; user-select:none;">×</button>
-    <video controls id="playerVideo" tabindex="0" aria-describedby="playerDesc" playsinline style="width:100%; border-radius:15px; background:black; max-height:70vh; object-fit:contain;"></video>
-    <div id="playerDesc" style="margin-top: 8px; color: #ddd; font-size: 0.95rem;"></div>
-  </div>
-</div>
+    <div class="video-card">
+      <img src="https://via.placeholder.com/960x200?text=Miniature+Vidéo+2" alt="Vidéo 2" class="video-thumb" />
+      <div class="video-info">
+        <h2 class="video-title">Titre de la Vidéo 2</h2>
+        <p class="video-details">Durée: 8:20 · Vues: 8 910</p>
+      </div>
+    </div>
+  </main>
 
-<script>
-(() => {
-  // Configuration Supabase
-  const SUPABASE_URL = 'https://yxlzzduvuqcrrwqwmngz.supabase.co';
-  const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl4bHp6ZHV2dXFjcnJ3cXdtbmd6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTQ5MDU4MTgsImV4cCI6MjA3MDQ4MTgxOH0.53JEyXxF9paOCRHSOvdzGz9Gr0cubEB7mPuhvlDqwk8';
-
-  const supabase = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-
-  // DOM Elements
-  const splash = document.getElementById('splash');
-  const passForm = document.getElementById('passForm');
-  const accessCodeInput = document.getElementById('accessCode');
-  const passError = document.getElementById('passError');
-  const app = document.getElementById('app');
-  const videoGrid = document.getElementById('videoGrid');
-  const sortSelect = document.getElementById('sortSelect');
-  const searchInput = document.getElementById('searchInput');
-  const addVideoBtn = document.getElementById('addVideoBtn');
-
-  const addEditModal = document.getElementById('addEditModal');
-  const addEditTitle = document.getElementById('addEditTitle');
-  const addEditForm = document.getElementById('addEditForm');
-  const cancelAddEdit = document.getElementById('cancelAddEdit');
-
-  const videoPlayerModal = document.getElementById('videoPlayerModal');
-  const playerVideo = document.getElementById('playerVideo');
-  const playerDesc = document.getElementById('playerDesc');
-
-  let videos = [];
-  let editVideoId = null; // null = ajout, sinon id modifié
-
-  // Focus management helpers
-  function trapFocus(element) {
-    const focusableElements = element.querySelectorAll('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])');
-    const firstFocusable = focusableElements[0];
-    const lastFocusable = focusableElements[focusableElements.length - 1];
-
-    element.addEventListener('keydown', e => {
-      if (e.key === 'Tab') {
-        if (e.shiftKey) { // shift+tab
-          if (document.activeElement === firstFocusable) {
-            e.preventDefault();
-            lastFocusable.focus();
-          }
-        } else { // tab
-          if (document.activeElement === lastFocusable) {
-            e.preventDefault();
-            firstFocusable.focus();
-          }
-        }
-      }
-    });
-  }
-
-  // Accès protégé
-  const ACCESS_PASSWORD = '123456'; // À modifier si besoin
-
-  passForm.addEventListener('submit', e => {
-    e.preventDefault();
-    const val = accessCodeInput.value.trim();
-    if (val === ACCESS_PASSWORD) {
-      passError.style.display = 'none';
-      splash.style.display = 'none';
-      app.hidden = false;
-      app.focus();
-      loadVideos();
-    } else {
-      passError.style.display = 'block';
-      accessCodeInput.select();
-    }
-  });
-
-  // Charge vidéos depuis Supabase
-  async function loadVideos() {
-    const { data, error } = await supabase
-      .from('videos')
-      .select('*');
-    if (error) {
-      alert("Erreur de chargement des vidéos : " + error.message);
-      return;
-    }
-    videos = data || [];
-    renderVideos();
-  }
-
-  // Affiche les vidéos dans la grille
-  function renderVideos() {
-    const sortBy = sortSelect.value;
-    const searchTerm = searchInput.value.trim().toLowerCase();
-
-    let filtered = videos.filter(v => v.title.toLowerCase().includes(searchTerm));
-
-    filtered.sort((a, b) => {
-      if (a[sortBy] < b[sortBy]) return -1;
-      if (a[sortBy] > b[sortBy]) return 1;
-      return 0;
-    });
-
-    videoGrid.innerHTML = '';
-
-    if (filtered.length === 0) {
-      videoGrid.innerHTML = '<p style="color:#777;">Aucune vidéo trouvée.</p>';
-      return;
-    }
-
-    filtered.forEach(video => {
-      const card = document.createElement('article');
-      card.setAttribute('tabindex', '0');
-      card.setAttribute('role', 'button');
-      card.setAttribute('aria-label', `Lire la vidéo ${video.title}`);
-      card.style.background = '#222';
-      card.style.border = '2px solid #ffdd00';
-      card.style.borderRadius = '12px';
-      card.style.padding = '12px';
-      card.style.cursor = 'pointer';
-      card.style.display = 'flex';
-      card.style.flexDirection = 'column';
-      card.style.gap = '8px';
-      card.style.outline = 'none';
-
-      card.addEventListener('click', () => openVideoPlayer(video));
-      card.addEventListener('keydown', e => {
-        if (e.key === 'Enter' || e.key === ' ') {
-          e.preventDefault();
-          openVideoPlayer(video);
-        }
-      });
-
-      const preview = document.createElement('img');
-      preview.alt = `Aperçu vidéo ${video.title}`;
-      preview.loading = 'lazy';
-      preview.style.width = '100%';
-      preview.style.borderRadius = '10px';
-      preview.style.objectFit = 'cover';
-      preview.style.aspectRatio = '16/9';
-      preview.style.background = '#000';
-
-      if (video.previewUrl && video.previewUrl.trim() !== '') {
-        preview.src = video.previewUrl;
-      } else {
-        preview.src = 'https://via.placeholder.com/320x180?text=No+Preview';
-      }
-
-      const title = document.createElement('h3');
-      title.textContent = video.title;
-      title.style.margin = '0';
-      title.style.fontSize = '1.1rem';
-      title.style.color = '#ffdd00';
-      title.style.userSelect = 'none';
-
-      const code = document.createElement('div');
-      code.textContent = `Code : ${video.code}`;
-      code.style.fontSize = '0.85rem';
-      code.style.color = '#ccc';
-
-      const desc = document.createElement('p');
-      desc.textContent = video.description || '';
-      desc.style.fontSize = '0.9rem';
-      desc.style.color = '#aaa';
-      desc.style.flexGrow = '1';
-
-      // Edit & Delete buttons container
-      const btns = document.createElement('div');
-      btns.style.display = 'flex';
-      btns.style.justifyContent = 'flex-end';
-      btns.style.gap = '10px';
-
-      const editBtn = document.createElement('button');
-      editBtn.textContent = '✎';
-      editBtn.title = `Modifier la vidéo ${video.title}`;
-      editBtn.setAttribute('aria-label', `Modifier la vidéo ${video.title}`);
-      editBtn.style.background = '#ffdd00';
-      editBtn.style.border = 'none';
-      editBtn.style.borderRadius = '8px';
-      editBtn.style.width = '32px';
-      editBtn.style.height = '32px';
-      editBtn.style.cursor = 'pointer';
-      editBtn.style.color = '#111';
-      editBtn.style.fontWeight = 'bold';
-
-      editBtn.addEventListener('click', e => {
-        e.stopPropagation();
-        openAddEditModal(video);
-      });
-
-      const delBtn = document.createElement('button');
-      delBtn.textContent = '✕';
-      delBtn.title = `Supprimer la vidéo ${video.title}`;
-      delBtn.setAttribute('aria-label', `Supprimer la vidéo ${video.title}`);
-      delBtn.style.background = '#ff4444';
-      delBtn.style.border = 'none';
-      delBtn.style.borderRadius = '8px';
-      delBtn.style.width = '32px';
-      delBtn.style.height = '32px';
-      delBtn.style.cursor = 'pointer';
-      delBtn.style.color = '#fff';
-      delBtn.style.fontWeight = 'bold';
-
-      delBtn.addEventListener('click', e => {
-        e.stopPropagation();
-        if (confirm(`Confirmer la suppression de "${video.title}" ?`)) {
-          deleteVideo(video.id);
-        }
-      });
-
-      btns.appendChild(editBtn);
-      btns.appendChild(delBtn);
-
-      card.appendChild(preview);
-      card.appendChild(title);
-      card.appendChild(code);
-      card.appendChild(desc);
-      card.appendChild(btns);
-
-      videoGrid.appendChild(card);
-    });
-  }
-
-  // Ouvre modal ajout/édition
-  function openAddEditModal(video) {
-    addEditModal.style.display = 'flex';
-    if (video) {
-      editVideoId = video.id;
-      addEditTitle.textContent = `Modifier "${video.title}"`;
-      addEditForm.videoTitle.value = video.title;
-      addEditForm.videoCode.value = video.code;
-      addEditForm.videoPreviewUrl.value = video.previewUrl || '';
-      addEditForm.videoVideoUrl.value = video.videoUrl;
-      addEditForm.videoDescription.value = video.description || '';
-      addEditForm.videoCode.disabled = true; // Ne pas modifier le code unique à l'édition
-    } else {
-      editVideoId = null;
-      addEditTitle.textContent = "Ajouter une vidéo";
-      addEditForm.reset();
-      addEditForm.videoCode.disabled = false;
-    }
-    // Focus premier champ
-    setTimeout(() => addEditForm.videoTitle.focus(), 100);
-    trapFocus(addEditModal);
-  }
-
-  // Ferme modal ajout/édition
-  function closeAddEditModal() {
-    addEditModal.style.display = 'none';
-    editVideoId = null;
-  }
-
-  // Ouvre modal lecteur vidéo
-  function openVideoPlayer(video) {
-    playerVideo.src = video.videoUrl;
-    playerVideo.setAttribute('aria-label', `Vidéo ${video.title}`);
-    playerDesc.textContent = video.description || '';
-    videoPlayerModal.style.display = 'flex';
-    playerVideo.focus();
-    trapFocus(videoPlayerModal);
-  }
-
-  // Ferme modal lecteur vidéo
-  function closeVideoPlayer() {
-    playerVideo.pause();
-    playerVideo.src = '';
-    playerDesc.textContent = '';
-    videoPlayerModal.style.display = 'none';
-  }
-
-  // Ajouter ou modifier vidéo dans Supabase
-  addEditForm.addEventListener('submit', async e => {
-    e.preventDefault();
-    const title = addEditForm.videoTitle.value.trim();
-    const code = addEditForm.videoCode.value.trim();
-    const previewUrl = addEditForm.videoPreviewUrl.value.trim();
-    const videoUrl = addEditForm.videoVideoUrl.value.trim();
-    const description = addEditForm.videoDescription.value.trim();
-
-    if (!title || !code || !videoUrl) {
-      alert('Veuillez remplir les champs obligatoires.');
-      return;
-    }
-
-    if (editVideoId) {
-      // Mise à jour
-      const { error } = await supabase
-        .from('videos')
-        .update({
-          title,
-          previewUrl: previewUrl || null,
-          videoUrl,
-          description: description || null
-        })
-        .eq('id', editVideoId);
-      if (error) {
-        alert("Erreur lors de la mise à jour : " + error.message);
-        return;
-      }
-      // Met à jour localement
-      const idx = videos.findIndex(v => v.id === editVideoId);
-      if (idx > -1) {
-        videos[idx] = { ...videos[idx], title, previewUrl: previewUrl || null, videoUrl, description: description || null };
-      }
-    } else {
-      // Ajout
-      // Vérifier unicité du code
-      const exists = videos.some(v => v.code === code);
-      if (exists) {
-        alert('Ce code est déjà utilisé, choisissez-en un autre.');
-        return;
-      }
-      const { data, error } = await supabase
-        .from('videos')
-        .insert([{ title, code, previewUrl: previewUrl || null, videoUrl, description: description || null }])
-        .select()
-        .single();
-      if (error) {
-        alert("Erreur lors de l'ajout : " + error.message);
-        return;
-      }
-      videos.push(data);
-    }
-
-    closeAddEditModal();
-    renderVideos();
-  });
-
-  cancelAddEdit.addEventListener('click', () => {
-    closeAddEditModal();
-  });
-
-  // Supprimer vidéo Supabase
-  async function deleteVideo(id) {
-    const { error } = await supabase
-      .from('videos')
-      .delete()
-      .eq('id', id);
-    if (error) {
-      alert('Erreur lors de la suppression : ' + error.message);
-      return;
-    }
-    videos = videos.filter(v => v.id !== id);
-    renderVideos();
-  }
-
-  // Fermer modals quand on clique sur la croix
-  document.querySelectorAll('.modal-close-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-      if (addEditModal.style.display === 'flex') closeAddEditModal();
-      if (videoPlayerModal.style.display === 'flex') closeVideoPlayer();
-    });
-  });
-
-  // Fermer modals au clic en dehors du contenu
-  [addEditModal, videoPlayerModal].forEach(modal => {
-    modal.addEventListener('click', e => {
-      if (e.target === modal) {
-        if (modal === addEditModal) closeAddEditModal();
-        if (modal === videoPlayerModal) closeVideoPlayer();
-      }
-    });
-  });
-
-  // Tri et recherche
-  sortSelect.addEventListener('change', renderVideos);
-  searchInput.addEventListener('input', renderVideos);
-
-  // Ouvre modal ajout
-  addVideoBtn.addEventListener('click', () => {
-    openAddEditModal(null);
-  });
-
-  // Accessibilité clavier pour fermeture modals (ESC)
-  window.addEventListener('keydown', e => {
-    if (e.key === 'Escape') {
-      if (addEditModal.style.display === 'flex') closeAddEditModal();
-      if (videoPlayerModal.style.display === 'flex') closeVideoPlayer();
-    }
-  });
-})();
-</script>
-
+  <footer>
+    &copy; 2025 SoVid. Tous droits réservés.
+  </footer>
 </body>
 </html>
