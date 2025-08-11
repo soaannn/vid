@@ -14,6 +14,7 @@
     flex-direction: column;
     align-items: center;
     padding: 1rem;
+    min-height: 100vh;
   }
   .soan-container {
     position: relative;
@@ -23,6 +24,7 @@
     text-transform: uppercase;
     letter-spacing: 0.3em;
     margin: 1rem 0 2rem;
+    user-select: none;
   }
   .stars {
     position: absolute;
@@ -50,27 +52,6 @@
     0%, 100% { opacity: 1; }
     50% { opacity: 0.3; }
   }
-  .upload-btn {
-    background: #ff0000;
-    color: white;
-    font-size: 2rem;
-    width: 60px;
-    height: 60px;
-    border-radius: 50%;
-    border: none;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    cursor: pointer;
-    position: fixed;
-    bottom: 20px;
-    right: 20px;
-    box-shadow: 0 4px 10px rgba(255,0,0,0.6);
-    z-index: 100;
-  }
-  .upload-btn:hover {
-    background: #cc0000;
-  }
   .sort-container {
     margin-bottom: 1rem;
   }
@@ -80,6 +61,7 @@
     color: white;
     border-radius: 5px;
     border: 1px solid #444;
+    font-size: 1rem;
   }
   .video-grid {
     display: grid;
@@ -87,6 +69,7 @@
     gap: 1rem;
     width: 100%;
     max-width: 1000px;
+    margin-bottom: 6rem;
   }
   .video-card {
     background: #1e1e1e;
@@ -99,6 +82,7 @@
     width: 100%;
     height: auto;
     background: black;
+    border-bottom: 1px solid #333;
   }
   .video-info {
     padding: 0.8rem;
@@ -106,11 +90,13 @@
   .video-title {
     font-weight: bold;
     margin-bottom: 0.4rem;
+    font-size: 1.1rem;
   }
   .video-desc {
     font-size: 0.9rem;
     color: #ccc;
     margin-bottom: 0.6rem;
+    min-height: 40px;
   }
   .video-actions {
     display: flex;
@@ -124,6 +110,9 @@
     border: none;
     cursor: pointer;
     border-radius: 5px;
+    font-size: 1rem;
+    transition: background-color 0.3s ease;
+    user-select: none;
   }
   .btn:hover {
     background: #555;
@@ -134,6 +123,65 @@
   }
   .fav {
     background: #ff0000;
+  }
+  /* Nouveau style bouton upload */
+  #uploadLabel {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    background: #ff0000;
+    width: 70px;
+    height: 70px;
+    border-radius: 50%;
+    box-shadow: 0 4px 12px rgba(255,0,0,0.7);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 3rem;
+    color: white;
+    cursor: pointer;
+    user-select: none;
+    transition: background-color 0.3s ease, box-shadow 0.3s ease;
+  }
+  #uploadLabel:hover {
+    background: #cc0000;
+    box-shadow: 0 6px 20px rgba(204,0,0,0.9);
+  }
+  #uploadLabel::after {
+    content: "Uploader une vidéo";
+    position: absolute;
+    bottom: 90px;
+    right: 0;
+    background: #222;
+    color: #ff0000;
+    padding: 6px 12px;
+    border-radius: 6px;
+    font-size: 1rem;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.3s ease;
+    white-space: nowrap;
+  }
+  #uploadLabel:hover::after {
+    opacity: 1;
+  }
+  #fileInput {
+    display: none;
+  }
+  /* Loader overlay during upload */
+  #loaderOverlay {
+    position: fixed;
+    top:0; left:0; right:0; bottom:0;
+    background: rgba(0,0,0,0.8);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #ff0000;
+    font-size: 2rem;
+    font-weight: 900;
+    user-select: none;
+    z-index: 9999;
+    display: none;
   }
 </style>
 </head>
@@ -161,8 +209,10 @@
 
   <div class="video-grid" id="videoGrid"></div>
 
-  <button class="upload-btn" id="uploadBtn">+</button>
-  <input type="file" id="fileInput" accept="video/*" style="display:none" />
+  <label id="uploadLabel" for="fileInput">+</label>
+  <input type="file" id="fileInput" accept="video/*" />
+
+  <div id="loaderOverlay">Upload en cours...</div>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/supabase.min.js"></script>
   <script>
@@ -173,7 +223,7 @@
 
     const videoGrid = document.getElementById('videoGrid');
     const fileInput = document.getElementById('fileInput');
-    const uploadBtn = document.getElementById('uploadBtn');
+    const loader = document.getElementById('loaderOverlay');
     const sortSelect = document.getElementById('sort');
 
     let videos = [];
@@ -184,6 +234,7 @@
         alert('Erreur récupération vidéos : ' + error.message);
         return;
       }
+      // Création d’objets vidéo avec URL publiques
       videos = data.map(file => ({
         title: file.name,
         desc: '',
@@ -221,6 +272,8 @@
         const videoEl = document.createElement('video');
         videoEl.src = vid.url;
         videoEl.controls = true;
+        videoEl.preload = "metadata";
+        videoEl.title = vid.title;
         const info = document.createElement('div');
         info.className = 'video-info';
         const title = document.createElement('div');
@@ -231,6 +284,7 @@
         desc.textContent = vid.desc;
         const actions = document.createElement('div');
         actions.className = 'video-actions';
+
         const likeBtn = document.createElement('button');
         likeBtn.className = 'btn' + (vid.liked ? ' liked' : '');
         likeBtn.textContent = `👍 ${vid.likes}`;
@@ -240,6 +294,7 @@
           saveVideos();
           renderVideos();
         };
+
         const favBtn = document.createElement('button');
         favBtn.className = 'btn' + (vid.fav ? ' fav' : '');
         favBtn.textContent = '★';
@@ -248,32 +303,36 @@
           saveVideos();
           renderVideos();
         };
+
         actions.appendChild(likeBtn);
         actions.appendChild(favBtn);
         info.appendChild(title);
         info.appendChild(desc);
         info.appendChild(actions);
+
         card.appendChild(videoEl);
         card.appendChild(info);
         videoGrid.appendChild(card);
       });
     }
 
-    uploadBtn.addEventListener('click', () => fileInput.click());
-
     fileInput.addEventListener('change', async e => {
       const file = e.target.files[0];
       if (!file) return;
 
-      const title = prompt('Titre de la vidéo :') || file.name;
-      const desc = prompt('Description :') || '';
+      const title = prompt('Titre de la vidéo :', file.name) || file.name;
+      const desc = prompt('Description :', '') || '';
 
       const filePath = `${Date.now()}_${file.name}`;
+
+      loader.style.display = 'flex';
 
       const { data, error } = await supabase.storage.from('videos').upload(filePath, file, {
         cacheControl: '3600',
         upsert: false
       });
+
+      loader.style.display = 'none';
 
       if (error) {
         alert('Erreur upload : ' + error.message);
@@ -292,6 +351,8 @@
       });
       saveVideos();
       renderVideos();
+
+      fileInput.value = ''; // reset input
     });
 
     sortSelect.addEventListener('change', renderVideos);
@@ -299,7 +360,7 @@
     (async () => {
       loadVideosMeta();
       await fetchVideos();
-      // Fusion des métadonnées locales (likes, fav, desc) dans les vidéos récupérées
+      // Fusion métadonnées locales
       const localMeta = JSON.parse(localStorage.getItem('videosMeta') || '[]');
       videos = videos.map(v => {
         const meta = localMeta.find(m => m.url === v.url);
