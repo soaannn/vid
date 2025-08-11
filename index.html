@@ -3,8 +3,9 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>Soan - Upload vidéos</title>
+<title>Soan - Upload vidéos avec erreurs</title>
 <style>
+  /* Styles inchangés sauf ajout d'overlay d'erreur */
   body {
     margin: 0;
     background: #121212;
@@ -126,7 +127,6 @@
   .fav {
     background: #ff0000;
   }
-  /* Nouveau style bouton upload */
   #uploadLabel {
     position: fixed;
     bottom: 20px;
@@ -170,7 +170,6 @@
   #fileInput {
     display: none;
   }
-  /* Loader overlay during upload */
   #loaderOverlay {
     position: fixed;
     top:0; left:0; right:0; bottom:0;
@@ -184,6 +183,28 @@
     user-select: none;
     z-index: 9999;
     display: none;
+  }
+  #errorOverlay {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    background: rgba(255,0,0,0.85);
+    color: white;
+    padding: 1rem 1.5rem;
+    border-radius: 10px;
+    font-weight: 700;
+    font-size: 1rem;
+    user-select: none;
+    box-shadow: 0 4px 15px rgba(255,0,0,0.9);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.4s ease;
+    z-index: 10000;
+    max-width: 320px;
+  }
+  #errorOverlay.show {
+    opacity: 1;
+    pointer-events: auto;
   }
 </style>
 </head>
@@ -215,6 +236,7 @@
   <input type="file" id="fileInput" accept="video/*" />
 
   <div id="loaderOverlay">Upload en cours...</div>
+  <div id="errorOverlay"></div>
 
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/supabase.min.js"></script>
   <script>
@@ -227,40 +249,59 @@
     const fileInput = document.getElementById('fileInput');
     const loader = document.getElementById('loaderOverlay');
     const sortSelect = document.getElementById('sort');
+    const errorOverlay = document.getElementById('errorOverlay');
 
     let videos = [];
 
+    function showError(message) {
+      errorOverlay.textContent = message;
+      errorOverlay.classList.add('show');
+      setTimeout(() => {
+        errorOverlay.classList.remove('show');
+      }, 5000);
+    }
+
     async function fetchVideos() {
-      const { data, error } = await supabase.storage.from('videos').list('', { limit: 100 });
-      if (error) {
-        alert('Erreur récupération vidéos : ' + error.message);
-        return;
+      try {
+        const { data, error } = await supabase.storage.from('videos').list('', { limit: 100 });
+        if (error) {
+          showError(`Erreur fetch vidéos: ${error.message}`);
+          return [];
+        }
+        const publicVideos = data.map(file => {
+          const { data: urlData } = supabase.storage.from('videos').getPublicUrl(file.name);
+          return {
+            title: file.name,
+            desc: '',
+            url: urlData.publicUrl,
+            likes: 0,
+            liked: false,
+            fav: false
+          };
+        });
+        return publicVideos;
+      } catch (err) {
+        showError(`Erreur réseau fetch vidéos : ${err.message}`);
+        return [];
       }
-      // On crée des objets vidéo basiques
-      const publicVideos = data.map(file => {
-        const { publicUrl } = supabase.storage.from('videos').getPublicUrl(file.name).data;
-        return {
-          title: file.name,
-          desc: '',
-          url: publicUrl,
-          likes: 0,
-          liked: false,
-          fav: false
-        };
-      });
-      return publicVideos;
     }
 
     function saveVideos() {
-      localStorage.setItem('videosMeta', JSON.stringify(videos));
+      try {
+        localStorage.setItem('videosMeta', JSON.stringify(videos));
+      } catch (err) {
+        showError("Erreur stockage local : " + err.message);
+      }
     }
 
     function loadVideosMeta() {
-      const meta = localStorage.getItem('videosMeta');
-      if (meta) {
-        return JSON.parse(meta);
+      try {
+        const meta = localStorage.getItem('videosMeta');
+        return meta ? JSON.parse(meta) : [];
+      } catch (err) {
+        showError("Erreur lecture stockage local : " + err.message);
+        return [];
       }
-      return [];
     }
 
     function renderVideos() {
@@ -324,10 +365,9 @@
     }
 
     fileInput.addEventListener('click', e => {
-      // Demander le code avant même d’ouvrir le selecteur de fichiers
       const code = prompt("Entrez le code d'accès pour uploader :", "");
       if (code !== '2012') {
-        alert('Code incorrect, upload annulé.');
+        showError('Code incorrect, upload annulé.');
         e.preventDefault();
         fileInput.blur();
         return false;
@@ -345,53 +385,61 @@
 
       loader.style.display = 'flex';
 
-      const { data, error } = await supabase.storage.from('videos').upload(filePath, file, {
-        cacheControl: '3600',
-        upsert: false
-      });
+      try {
+        const { data, error } = await supabase.storage.from('videos').upload(filePath, file, {
+          cacheControl: '3600',
+          upsert: false
+        });
 
-      loader.style.display = 'none';
+        loader.style.display = 'none';
 
-      if (error) {
-        alert('Erreur upload : ' + error.message);
-        return;
+        if (error) {
+          showError(`Erreur upload : ${error.message}`);
+          return;
+        }
+
+        const { data: urlData } = supabase.storage.from('videos').getPublicUrl(filePath);
+
+        if(!urlData.publicUrl) {
+          showError('Erreur: URL publique introuvable après upload.');
+          return;
+        }
+
+        videos.push({
+          title,
+          desc,
+          url: urlData.publicUrl,
+          likes: 0,
+          liked: false,
+          fav: false
+        });
+        saveVideos();
+        renderVideos();
+      } catch (err) {
+        loader.style.display = 'none';
+        showError('Erreur réseau lors de l’upload : ' + err.message);
       }
 
-      const { publicUrl } = supabase.storage.from('videos').getPublicUrl(filePath).data;
-
-      videos.push({
-        title,
-        desc,
-        url: publicUrl,
-        likes: 0,
-        liked: false,
-        fav: false
-      });
-      saveVideos();
-      renderVideos();
-
-      fileInput.value = ''; // reset input
+      fileInput.value = '';
     });
 
     sortSelect.addEventListener('change', renderVideos);
 
     (async () => {
-      // Charger métadonnées locales
-      const localMeta = loadVideosMeta();
+      try {
+        const localMeta = loadVideosMeta();
+        const onlineVideos = await fetchVideos();
 
-      // Récupérer vidéos en ligne
-      const onlineVideos = await fetchVideos();
+        videos = onlineVideos.map(v => {
+          const local = localMeta.find(m => m.url === v.url);
+          return local ? { ...v, likes: local.likes, liked: local.liked, fav: local.fav, desc: local.desc || v.desc } : v;
+        });
 
-      // Fusionner données : prioriser métadonnées locales sur les vidéos existantes en ligne
-      videos = onlineVideos.map(v => {
-        const local = localMeta.find(m => m.url === v.url);
-        return local ? { ...v, likes: local.likes, liked: local.liked, fav: local.fav, desc: local.desc || v.desc } : v;
-      });
-
-      // Sauvegarder pour garder la synchro
-      saveVideos();
-
-      renderVideos();
+        saveVideos();
+        renderVideos();
+      } catch (err) {
+        showError('Erreur initialisation : ' + err.message);
+      }
     })();
   </script>
 
