@@ -1,370 +1,112 @@
 <!DOCTYPE html>
-<html lang="fr">
+<html lang="en">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>SOVID - Plateforme Vidéo</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SIA Message Generator</title>
 <style>
-  :root {
-    --orange: #ffcc00;
-    --dark-gray: #141414;
-    --light-gray: #222222;
-    --white: #ffffff;
-  }
-  body {
-    margin: 0;
-    background-color: var(--dark-gray);
-    color: var(--white);
-    font-family: Arial, sans-serif;
-  }
-  header {
-    display: flex;
-    align-items: center;
-    background-color: var(--dark-gray);
-    padding: 10px 20px;
-    border-bottom: 3px solid var(--orange);
-  }
-  .logo {
-    font-weight: 900;
-    font-size: 28px;
-    color: var(--orange);
-    user-select: none;
-    letter-spacing: 3px;
-  }
-  nav {
-    margin-left: auto;
-  }
-  nav a {
-    color: var(--white);
-    text-decoration: none;
-    margin-left: 20px;
-    font-weight: bold;
-    transition: color 0.3s ease;
-  }
-  nav a:hover {
-    color: var(--orange);
-  }
-  main {
-    padding: 20px;
-    max-width: 960px;
-    margin: 0 auto;
-  }
-  .video-card {
-    background-color: var(--light-gray);
-    border-radius: 8px;
-    overflow: hidden;
-    box-shadow: 0 4px 8px rgba(0,0,0,0.7);
-    margin-bottom: 20px;
-    cursor: default;
-    transition: transform 0.3s ease;
-  }
-  .video-card:hover {
-    transform: scale(1.02);
-  }
-  .video-player {
-    width: 100%;
-    height: auto;
-    background-color: black;
-    border-radius: 8px 8px 0 0;
-    max-height: 360px;
-    object-fit: contain;
-    display: block;
-  }
-  .video-info {
-    padding: 10px 15px;
-  }
-  .video-title {
-    font-size: 18px;
-    font-weight: bold;
-    margin: 0 0 6px 0;
-    color: var(--white);
-  }
-  .video-description {
-    font-size: 14px;
-    color: #ccc;
-    margin-bottom: 6px;
-  }
-  #auth-screen {
-    position: fixed;
-    inset: 0;
-    background-color: var(--dark-gray);
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    z-index: 9999;
-  }
-  #auth-screen input {
-    font-size: 20px;
-    padding: 10px;
-    width: 200px;
-    border-radius: 6px;
-    border: none;
-    margin-bottom: 10px;
-    text-align: center;
-  }
-  #auth-screen button {
-    font-size: 18px;
-    padding: 10px 20px;
-    background-color: var(--orange);
-    border: none;
-    color: var(--dark-gray);
-    font-weight: bold;
-    cursor: pointer;
-    border-radius: 6px;
-    transition: background-color 0.3s ease;
-  }
-  #auth-screen button:hover {
-    background-color: #e6b800;
-  }
-  #add-video-btn {
-    position: fixed;
-    bottom: 30px;
-    right: 30px;
-    font-size: 32px;
-    background-color: var(--orange);
-    border: none;
-    color: var(--dark-gray);
-    font-weight: 900;
-    width: 60px;
-    height: 60px;
-    border-radius: 50%;
-    cursor: pointer;
-    box-shadow: 0 4px 10px rgba(255,204,0,0.6);
-    transition: background-color 0.3s ease;
-    display: none;
-  }
-  #add-video-btn:hover {
-    background-color: #e6b800;
-  }
-  #add-video-form {
-    position: fixed;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%, -50%);
-    background-color: var(--light-gray);
-    padding: 20px;
-    border-radius: 10px;
-    box-shadow: 0 8px 20px rgba(0,0,0,0.8);
-    display: none;
-    z-index: 10000;
-    width: 320px;
-  }
-  #add-video-form h3 {
-    margin-top: 0;
-    color: var(--orange);
-  }
-  #add-video-form label {
-    display: block;
-    margin: 10px 0 5px;
-    font-weight: bold;
-    color: var(--white);
-  }
-  #add-video-form input, #add-video-form textarea {
-    width: 100%;
-    padding: 8px;
-    border-radius: 6px;
-    border: none;
-    font-size: 14px;
-    resize: none;
-  }
-  #add-video-form textarea {
-    height: 60px;
-  }
-  #add-video-form button {
-    margin-top: 15px;
-    padding: 10px;
-    width: 100%;
-    background-color: var(--orange);
-    border: none;
-    font-weight: bold;
-    color: var(--dark-gray);
-    cursor: pointer;
-    border-radius: 6px;
-    transition: background-color 0.3s ease;
-  }
-  #add-video-form button:hover {
-    background-color: #e6b800;
-  }
-  #add-video-form #cancel-btn {
-    background-color: #555;
-    margin-top: 10px;
-  }
-  #add-video-form #cancel-btn:hover {
-    background-color: #444;
-  }
+    body {
+        font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        background-color: #f5f5f5;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        padding: 30px;
+    }
+    h1 {
+        color: #2c3e50;
+    }
+    form {
+        background-color: #fff;
+        padding: 20px 30px;
+        border-radius: 12px;
+        box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        margin-bottom: 20px;
+        width: 100%;
+        max-width: 500px;
+    }
+    label {
+        display: block;
+        margin-top: 10px;
+        font-weight: bold;
+    }
+    input {
+        width: 100%;
+        padding: 8px 10px;
+        margin-top: 5px;
+        border-radius: 6px;
+        border: 1px solid #ccc;
+    }
+    button {
+        margin-top: 15px;
+        padding: 10px 20px;
+        border: none;
+        background-color: #2980b9;
+        color: #fff;
+        font-weight: bold;
+        border-radius: 8px;
+        cursor: pointer;
+    }
+    button:hover {
+        background-color: #1c5980;
+    }
+    pre {
+        background-color: #2c3e50;
+        color: #ecf0f1;
+        padding: 20px;
+        border-radius: 12px;
+        white-space: pre-wrap;
+        max-width: 500px;
+        width: 100%;
+        overflow-x: auto;
+    }
 </style>
 </head>
 <body>
 
-<div id="auth-screen">
-  <h2>Entrez le code pour accéder à SOVID</h2>
-  <input type="password" id="code-input" placeholder="Code secret" />
-  <button id="auth-btn">Valider</button>
-  <p id="auth-error" style="color:#ff4444; display:none; margin-top:8px;">Code incorrect, réessayez.</p>
-</div>
+<h1>Termination Message Generator</h1>
 
-<header>
-  <div class="logo">SOVID</div>
-  <nav>
-    <a href="#" id="home-link">Accueil</a>
-    <a href="#" id="videos-link">Vidéos</a>
-  </nav>
-</header>
+<form id="terminationForm">
+    <label for="country">Country:</label>
+    <input type="text" id="country" placeholder="Singapore" required>
 
-<main>
-  <h1>Bienvenue sur SOVID</h1>
-  <p>Découvrez des vidéos sélectionnées pour vous.</p>
+    <label for="date">Date (DD.MM.YY):</label>
+    <input type="text" id="date" placeholder="26.08.25" required pattern="\d{2}\.\d{2}\.\d{2}">
 
-  <div id="videos-container">
-    <!-- Les vidéos chargées depuis Supabase apparaîtront ici -->
-  </div>
-</main>
+    <label for="company">Company:</label>
+    <input type="text" id="company" placeholder="Singapore Airlines" required>
 
-<button id="add-video-btn" title="Ajouter une vidéo">+</button>
+    <button type="submit">Generate Message</button>
+</form>
 
-<div id="add-video-form">
-  <h3>Ajouter une vidéo</h3>
-  <label for="video-url">URL de la vidéo</label>
-  <input type="url" id="video-url" placeholder="https://exemple.com/video.mp4" required />
-  <label for="video-title">Titre</label>
-  <input type="text" id="video-title" placeholder="Titre de la vidéo" required />
-  <label for="video-description">Description</label>
-  <textarea id="video-description" placeholder="Description courte"></textarea>
-  <button id="save-video-btn">Ajouter</button>
-  <button id="cancel-btn" type="button">Annuler</button>
-  <p id="form-error" style="color:#ff4444; display:none; margin-top:8px;"></p>
-</div>
+<pre id="output"></pre>
 
-<script type="module">
-import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js/+esm'
+<script>
+document.getElementById('terminationForm').addEventListener('submit', function(e){
+    e.preventDefault();
+    
+    const country = document.getElementById('country').value.trim();
+    const date = document.getElementById('date').value.trim();
+    const company = document.getElementById('company').value.trim();
 
-const SUPABASE_URL = 'https://yxlzzduvuqcrrwqwmngz.supabase.co'
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Inl4bHp6ZHV2dXFjcnJ3cXdtbmd6Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTQ5MDU4MTgsImV4cCI6MjA3MDQ4MTgxOH0.53JEyXxF9paOCRHSOvdzGz9Gr0cubEB7mPuhvlDqwk8'
+    const regex = /^\d{2}\.\d{2}\.\d{2}$/;
+    if(!regex.test(date)){
+        alert('⚠️ Invalid date format. Please use DD.MM.YY');
+        return;
+    }
 
-const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
+    const message = `<:sanction:1409821844587937902> **TERMINATION OF EMPLOYMENT**
+-# ${country}, ${date}
 
-const authScreen = document.getElementById('auth-screen')
-const authBtn = document.getElementById('auth-btn')
-const codeInput = document.getElementById('code-input')
-const authError = document.getElementById('auth-error')
-const addVideoBtn = document.getElementById('add-video-btn')
-const addVideoForm = document.getElementById('add-video-form')
-const cancelBtn = document.getElementById('cancel-btn')
-const saveVideoBtn = document.getElementById('save-video-btn')
-const formError = document.getElementById('form-error')
-const videosContainer = document.getElementById('videos-container')
+> Greetings, a breach of our **Code of Conduct** has been identified, and the Human Resources Department is therefore issuing a formal sanction. You may submit an appeal within **72 hours**; beyond this period, appeals will **no longer be accepted**.
 
-const ACCESS_CODE = '070112'
-let authenticated = false
+> You have not met the **monthly quota**, an essential requirement at ${company}. We encourage you to demonstrate greater consistency and commitment in your future opportunities. Consequently, your employment with ${company} **has been terminated.** We hope you will consider reapplying in the future, and any application will be carefully reviewed.
 
-authBtn.addEventListener('click', () => {
-  const val = codeInput.value.trim()
-  if(val === ACCESS_CODE){
-    authenticated = true
-    authScreen.style.display = 'none'
-    addVideoBtn.style.display = 'block'
-    loadVideos()
-  } else {
-    authError.style.display = 'block'
-  }
-})
+**Best regards**,
+> <:user:1409821835217993759> **Human Resources Department**`;
 
-codeInput.addEventListener('keyup', e => {
-  if(e.key === 'Enter'){
-    authBtn.click()
-  }
-})
-
-async function loadVideos(){
-  videosContainer.innerHTML = 'Chargement...'
-  const { data, error } = await supabase
-    .from('videos')
-    .select('*')
-    .order('id', {ascending:false})
-
-  if(error){
-    videosContainer.innerHTML = `<p style="color:#ff4444">Erreur de chargement: ${error.message}</p>`
-    return
-  }
-
-  if(!data || data.length === 0){
-    videosContainer.innerHTML = '<p>Aucune vidéo disponible.</p>'
-    return
-  }
-
-  videosContainer.innerHTML = ''
-  data.forEach(video => {
-    const card = document.createElement('div')
-    card.className = 'video-card'
-
-    card.innerHTML = `
-      <video class="video-player" controls preload="metadata">
-        <source src="${escapeHtml(video.url)}" type="video/mp4" />
-        Votre navigateur ne supporte pas la lecture vidéo.
-      </video>
-      <div class="video-info">
-        <h2 class="video-title">${escapeHtml(video.title)}</h2>
-        <p class="video-description">${escapeHtml(video.description || '')}</p>
-      </div>
-    `
-    videosContainer.appendChild(card)
-  })
-}
-
-addVideoBtn.addEventListener('click', () => {
-  addVideoForm.style.display = 'block'
-  formError.style.display = 'none'
-  addVideoForm.reset?.()
-  document.getElementById('video-url').value = ''
-  document.getElementById('video-title').value = ''
-  document.getElementById('video-description').value = ''
-})
-
-cancelBtn.addEventListener('click', () => {
-  addVideoForm.style.display = 'none'
-  formError.style.display = 'none'
-})
-
-saveVideoBtn.addEventListener('click', async () => {
-  formError.style.display = 'none'
-  const url = document.getElementById('video-url').value.trim()
-  const title = document.getElementById('video-title').value.trim()
-  const description = document.getElementById('video-description').value.trim()
-
-  if(!url || !title){
-    formError.textContent = 'L’URL et le titre sont obligatoires.'
-    formError.style.display = 'block'
-    return
-  }
-
-  try {
-    new URL(url)
-  } catch {
-    formError.textContent = 'L’URL n’est pas valide.'
-    formError.style.display = 'block'
-    return
-  }
-
-  const { data, error } = await supabase
-    .from('videos')
-    .insert([{ url, title, description }])
-
-  if(error){
-    formError.textContent = 'Erreur lors de l’ajout: ' + error.message
-    formError.style.display = 'block'
-    return
-  }
-
-  addVideoForm.style.display = 'none'
-  loadVideos()
-})
-
-function escapeHtml(text) {
-  const div = document.createElement('div')
-  div.textContent = text
-  return div.innerHTML
-}
+    document.getElementById('output').textContent = message;
+});
 </script>
 
 </body>
