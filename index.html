@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>SIA Generator</title>
+<title>Employee Server Format Generator</title>
 <style>
     body {
         font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
@@ -11,10 +11,46 @@
         display: flex;
         flex-direction: column;
         align-items: center;
-        padding: 50px;
+        padding: 40px;
     }
     h1 {
         color: #2c3e50;
+        margin-bottom: 20px;
+    }
+    form {
+        background-color: #fff;
+        padding: 20px 30px;
+        border-radius: 12px;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+        margin-bottom: 25px;
+        width: 100%;
+        max-width: 650px;
+    }
+    label {
+        display: block;
+        margin-top: 10px;
+        font-weight: bold;
+    }
+    input {
+        width: 100%;
+        padding: 8px 10px;
+        margin-top: 5px;
+        border-radius: 6px;
+        border: 1px solid #ccc;
+    }
+    button {
+        margin-top: 15px;
+        padding: 12px 22px;
+        border: none;
+        background-color: #2980b9;
+        color: #fff;
+        font-weight: bold;
+        border-radius: 8px;
+        cursor: pointer;
+        font-size: 15px;
+    }
+    button:hover {
+        background-color: #1c5980;
     }
     pre {
         background-color: #2c3e50;
@@ -22,59 +58,126 @@
         padding: 20px;
         border-radius: 12px;
         white-space: pre-wrap;
-        max-width: 600px;
+        max-width: 650px;
         width: 100%;
         overflow-x: auto;
         font-size: 14px;
-        margin-top: 20px;
+        margin-bottom: 20px;
     }
-    button {
-        margin-top: 20px;
-        padding: 10px 20px;
-        border: none;
-        background-color: #2980b9;
-        color: #fff;
+    .section-title {
         font-weight: bold;
-        border-radius: 8px;
-        cursor: pointer;
-    }
-    button:hover {
-        background-color: #1c5980;
+        color: #16a085;
+        margin-top: 25px;
     }
 </style>
 </head>
 <body>
 
-<h1>Automatic Termination Message</h1>
-<button id="generateBtn">Generate Message</button>
+<h1>Employee Server Format Generator</h1>
 
-<pre id="output"></pre>
+<form id="flightForm">
+    <label for="flightNumber">Flight Number (e.g. SQ318):</label>
+    <input type="text" id="flightNumber" required>
+
+    <label for="timestamp">Timestamp (e.g. 14:30 UTC):</label>
+    <input type="text" id="timestamp" required>
+
+    <label for="plane">Plane (e.g. Airbus A350-900):</label>
+    <input type="text" id="plane" required>
+
+    <label for="departure">Departure Airport:</label>
+    <input type="text" id="departure" required>
+
+    <label for="arrival">Arrival Airport:</label>
+    <input type="text" id="arrival" required>
+
+    <label for="airportName">Airport Name (for link text):</label>
+    <input type="text" id="airportName" required>
+
+    <label for="airportLink">Airport Link (URL):</label>
+    <input type="text" id="airportLink" required>
+
+    <button type="submit">Generate Format</button>
+</form>
+
+<div class="section-title">EMPLOYEE SERVER FORMAT:</div>
+<pre id="employeeFormat"></pre>
+
+<div class="section-title">BRIEFING:</div>
+<pre id="briefing"></pre>
+
+<div class="section-title">SERVER OPEN:</div>
+<pre id="serverOpen"></pre>
+
+<div class="section-title">SERVER CLOSED:</div>
+<pre id="serverClosed"></pre>
 
 <script>
-function formatDate(date) {
-    let dd = String(date.getDate()).padStart(2, '0');
-    let mm = String(date.getMonth() + 1).padStart(2, '0'); // Months are 0-based
-    let yy = String(date.getFullYear()).slice(-2);
-    return `${dd}.${mm}.${yy}`;
-}
+document.getElementById('flightForm').addEventListener('submit', function(e){
+    e.preventDefault();
 
-document.getElementById('generateBtn').addEventListener('click', () => {
-    const country = "Singapore";
-    const company = "Singapore Airlines";
-    const today = new Date();
-    const dateStr = formatDate(today);
+    const flight = document.getElementById('flightNumber').value.trim();
+    const timestamp = document.getElementById('timestamp').value.trim();
+    const plane = document.getElementById('plane').value.trim();
+    const dep = document.getElementById('departure').value.trim();
+    const arr = document.getElementById('arrival').value.trim();
+    const airportName = document.getElementById('airportName').value.trim();
+    const airportLink = document.getElementById('airportLink').value.trim();
 
-    const message = `<:sanction:1409821844587937902> **TERMINATION OF EMPLOYMENT**
--# ${country}, ${dateStr}
+    // EMPLOYEE SERVER FORMAT
+    const employeeFormat = `<:plane:1409821865450405959> **${flight}** | Flight Scheduled
 
-> Greetings, a breach of our **Code of Conduct** has been identified, and the Human Resources Department is therefore issuing a formal sanction. You may submit an appeal within **72 hours**; beyond this period, appeals will **no longer be accepted**.
+> A new Singapore Airlines flight has been scheduled for **${timestamp}**, operating on our ${plane} from **${dep}** to **${arr}**. All employees are required to **confirm their allocation** by reacting to this message with the designated reaction. Employees who fail to report at least 15 minutes prior to departure will be subject to **disciplinary measures** in accordance with Staffing Department policy.
 
-> You have not met the **monthly quota**, an essential requirement at ${company}. We encourage you to demonstrate greater consistency and commitment in your future opportunities. Consequently, your employment with ${company} **has been terminated.** We hope you will consider reapplying in the future, and any application will be carefully reviewed.
+**Tarmac Supervisor**:
+**Purser**:
 
-**Best regards**,
-> <:user:1409821835217993759> **Human Resources Department**`;
+**Captain**:
+**First Officer**:
 
-    document.getElementById('output').textContent = message;
+**Cabin Crew**:
+> -
+> -
+> -
+> -
+> -
+
+**Ground Crew**:
+> -
+> -
+> -
+> -
+> -
+
+**Strikes**:`;
+
+    // BRIEFING
+    const briefing = `BRIEFING (15mins before unslock):
+
+<:user:1409821835217993759> **Flight Briefing**
+
+> **Thank you** for joining us at the airport to begin the **briefing**. All staff are requested to attend so that the flight can proceed **smoothly**. Those who have been assigned and do not show up for the flight will face **disciplinary action**.
+
+<:link:1409821848371462154> [**${airportName}**](${airportLink})`;
+
+    // SERVER OPEN
+    const serverOpen = `<:4_:1411701197194133585> **Check-in Open**
+-# ᴀ ꜱᴛᴀʀ ᴀʟʟɪᴀɴᴄᴇ ᴍᴇᴍʙᴇʀ
+
+> **All passengers** travelling on flight ${flight} to **${arr}** are now invited to proceed with check-in. Please be advised that check-in will close in 15 minutes to ensure the **smooth** and **timely departure** of the flight.
+
+<:6_:1411701204924502076> [**${airportName}**](${airportLink})`;
+
+    // SERVER CLOSED
+    const serverClosed = `<:4_:1411701197194133585> **Check-in Closed**
+-# ᴀ ꜱᴛᴀʀ ᴀʟʟɪᴀɴᴄᴇ ᴍᴇᴍʙᴇʀ
+
+> We would like to inform all passengers that check-in for flight ${flight} to **${arr}** is now **officially closed**. If you have missed your flight, we sincerely **apologize** for the inconvenience, thank you for your **understanding** and **cooperation**.`;
+
+    document.getElementById('employeeFormat').textContent = employeeFormat;
+    document.getElementById('briefing').textContent = briefing;
+    document.getElementById('serverOpen').textContent = serverOpen;
+    document.getElementById('serverClosed').textContent = serverClosed;
 });
 </script>
 
