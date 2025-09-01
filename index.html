@@ -79,8 +79,8 @@
     <label for="flightNumber">Flight Number (e.g. SQ318):</label>
     <input type="text" id="flightNumber" required>
 
-    <label for="timestamp">Timestamp (e.g. 14:30 UTC):</label>
-    <input type="text" id="timestamp" required>
+    <label for="datetime">Flight Date & Time (local):</label>
+    <input type="datetime-local" id="datetime" required>
 
     <label for="plane">Plane (e.g. Airbus A350-900):</label>
     <input type="text" id="plane" required>
@@ -117,7 +117,10 @@ document.getElementById('flightForm').addEventListener('submit', function(e){
     e.preventDefault();
 
     const flight = document.getElementById('flightNumber').value.trim();
-    const timestamp = document.getElementById('timestamp').value.trim();
+    const datetime = new Date(document.getElementById('datetime').value);
+    const unix = Math.floor(datetime.getTime() / 1000); // timestamp UNIX
+    const discordTimestamp = `<t:${unix}:F>`; // Long format Discord
+
     const plane = document.getElementById('plane').value.trim();
     const dep = document.getElementById('departure').value.trim();
     const arr = document.getElementById('arrival').value.trim();
@@ -127,7 +130,7 @@ document.getElementById('flightForm').addEventListener('submit', function(e){
     // EMPLOYEE SERVER FORMAT
     const employeeFormat = `<:plane:1409821865450405959> **${flight}** | Flight Scheduled
 
-> A new Singapore Airlines flight has been scheduled for **${timestamp}**, operating on our ${plane} from **${dep}** to **${arr}**. All employees are required to **confirm their allocation** by reacting to this message with the designated reaction. Employees who fail to report at least 15 minutes prior to departure will be subject to **disciplinary measures** in accordance with Staffing Department policy.
+> A new Singapore Airlines flight has been scheduled for **${discordTimestamp}**, operating on our ${plane} from **${dep}** to **${arr}**. All employees are required to **confirm their allocation** by reacting to this message with the designated reaction. Employees who fail to report at least 15 minutes prior to departure will be subject to **disciplinary measures** in accordance with Staffing Department policy.
 
 **Tarmac Supervisor**:
 **Purser**:
